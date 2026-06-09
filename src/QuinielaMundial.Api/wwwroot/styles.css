@@ -398,15 +398,35 @@ body.modo-resultados .resultado-real {
 .cruce-equipo {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 8px;
   font-weight: 800;
   line-height: 1.35;
 }
 
-.cruce-equipo small {
+.cruce-equipo span {
+  min-width: 0;
+}
+
+.cruce-marcador {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.cruce-marcador small {
   color: var(--muted);
   font-weight: 700;
   white-space: nowrap;
+}
+
+.cruce-marcador input {
+  width: 46px;
+  padding: 7px 5px;
+  text-align: center;
+  border-radius: 10px;
+  font-weight: 800;
 }
 
 .placeholder {

@@ -50,4 +50,47 @@ public sealed class ParticipantsController(ISqlConnectionFactory connectionFacto
 
         return CreatedAtAction(nameof(GetAll), new { id = response.Id }, response);
     }
+
+    [HttpPost("ensure")]
+    public async Task<ActionResult<ParticipantResponse>> Ensure(EnsureParticipantRequest request, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            return BadRequest("El nombre del participante es obligatorio.");
+        }
+
+        const string findSql = """
+            SELECT TOP 1 Id, Name, Email, CreatedAtUtc
+            FROM dbo.Participants
+            WHERE UPPER(Name) = UPPER(@Name)
+            ORDER BY Id;
+            """;
+
+        const string insertSql = """
+            INSERT INTO dbo.Participants (Name, Email)
+            OUTPUT INSERTED.Id, INSERTED.Name, INSERTED.Email, INSERTED.CreatedAtUtc
+            VALUES (@Name, @Email);
+            """;
+
+        using var connection = connectionFactory.CreateConnection();
+        var name = request.Name.Trim();
+        var email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+
+        var existing = await connection.QueryFirstOrDefaultAsync<ParticipantResponse>(new CommandDefinition(
+            findSql,
+            new { Name = name },
+            cancellationToken: cancellationToken));
+
+        if (existing is not null)
+        {
+            return Ok(existing);
+        }
+
+        var created = await connection.QuerySingleAsync<ParticipantResponse>(new CommandDefinition(
+            insertSql,
+            new { Name = name, Email = email },
+            cancellationToken: cancellationToken));
+
+        return Ok(created);
+    }
 }

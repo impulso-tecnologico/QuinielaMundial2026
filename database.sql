@@ -12,6 +12,10 @@ GO
 USE QuinielaMundial2026;
 GO
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
 IF OBJECT_ID(N'dbo.Predictions', N'U') IS NOT NULL DROP TABLE dbo.Predictions;
 IF OBJECT_ID(N'dbo.Matches', N'U') IS NOT NULL DROP TABLE dbo.Matches;
 IF OBJECT_ID(N'dbo.TournamentStages', N'U') IS NOT NULL DROP TABLE dbo.TournamentStages;
