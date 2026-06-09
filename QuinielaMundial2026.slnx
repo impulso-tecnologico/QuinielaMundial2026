@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/QuinielaMundial.Api/QuinielaMundial.Api.csproj" />
+    <Project Path="src/QuinielaMundial.Domain/QuinielaMundial.Domain.csproj" />
+    <Project Path="src/QuinielaMundial.Infrastructure/QuinielaMundial.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/QuinielaMundial.Tests/QuinielaMundial.Tests.csproj" />
+  </Folder>
+</Solution>

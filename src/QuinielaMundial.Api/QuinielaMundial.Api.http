@@ -1,0 +1,6 @@
+@QuinielaMundial.Api_HostAddress = http://localhost:5037
+
+GET {{QuinielaMundial.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
