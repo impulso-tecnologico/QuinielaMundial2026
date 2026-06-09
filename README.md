@@ -6,7 +6,7 @@ Aplicación para capturar pronósticos, resultados de fase de grupos y proyectar
 
 - `src/QuinielaMundial.Api`: API ASP.NET Core, Swagger, CORS y frontend estático en `wwwroot`.
 - `src/QuinielaMundial.Domain`: entidades y lógica de dominio.
-- `src/QuinielaMundial.Infrastructure`: Entity Framework Core y conexión a SQL Server.
+- `src/QuinielaMundial.Infrastructure`: Dapper y conexión a SQL Server.
 - `tests/QuinielaMundial.Tests`: pruebas automatizadas.
 - `quiniela_mundial_2026.html`: frontend original.
 
@@ -38,10 +38,25 @@ dotnet run --project src/QuinielaMundial.Api
 
 Swagger queda disponible en `/swagger` cuando la API corre en ambiente Development.
 
+## Crear base de datos
+
+Ejecuta `database.sql` en SQL Server Management Studio o Azure Data Studio. El script crea la base `QuinielaMundial2026`, las tablas, índices, constraints y carga los 72 partidos iniciales.
+
+Las relaciones principales son por Id:
+
+- `Matches.StageId` -> `TournamentStages.Id`
+- `Matches.HomeTeamId` -> `Teams.Id`
+- `Matches.AwayTeamId` -> `Teams.Id`
+- `Matches.ResultRegisteredByParticipantId` -> `Participants.Id`
+- `Predictions.ParticipantId` -> `Participants.Id`
+- `Predictions.MatchId` -> `Matches.Id`
+
+Los resultados aceptan `0` porque `HomeScore` y `AwayScore` permiten valores `>= 0`.
+
 ## Endpoints iniciales
 
 - `GET /api/matches`: lista partidos.
-- `PUT /api/matches/{matchId}/result`: actualiza resultado real.
+- `PUT /api/matches/{matchId}/result`: actualiza resultado real e indica qué participante lo registró.
 - `GET /api/participants`: lista participantes.
 - `POST /api/participants`: crea participante.
 - `GET /api/participants/{participantId}/predictions`: lista pronósticos.
@@ -49,6 +64,16 @@ Swagger queda disponible en `/swagger` cuando la API corre en ambiente Developme
 - `GET /api/standings/groups`: calcula tablas de grupos desde resultados.
 - `GET /api/knockout`: proyecta dieciseisavos desde los resultados capturados.
 
-## Siguiente paso recomendado
+## Acceso a datos
 
-Crear la primera migración de EF Core y precargar los 72 partidos en SQL Server.
+El proyecto usa Dapper con consultas SQL parametrizadas. No usa Entity Framework Core.
+
+Ejemplo para registrar resultado:
+
+```json
+{
+  "homeScore": 0,
+  "awayScore": 0,
+  "registeredByParticipantId": 1
+}
+```

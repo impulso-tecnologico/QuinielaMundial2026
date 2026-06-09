@@ -1,7 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using QuinielaMundial.Infrastructure.Persistence;
+using QuinielaMundial.Infrastructure.Data;
 
 namespace QuinielaMundial.Infrastructure;
 
@@ -12,7 +11,7 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("QuinielaDb")
             ?? throw new InvalidOperationException("Connection string 'QuinielaDb' was not found.");
 
-        services.AddDbContext<QuinielaDbContext>(options => options.UseSqlServer(connectionString));
+        services.AddSingleton<ISqlConnectionFactory>(_ => new SqlConnectionFactory(connectionString));
 
         return services;
     }

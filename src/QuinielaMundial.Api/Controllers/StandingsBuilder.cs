@@ -11,6 +11,11 @@ internal static class StandingsBuilder
 
         foreach (var match in matches)
         {
+            if (string.IsNullOrWhiteSpace(match.Group) || string.IsNullOrWhiteSpace(match.HomeTeam) || string.IsNullOrWhiteSpace(match.AwayTeam))
+            {
+                continue;
+            }
+
             if (!standings.ContainsKey(match.Group))
             {
                 standings[match.Group] = [];

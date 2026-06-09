@@ -1,24 +1,27 @@
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using QuinielaMundial.Api.Contracts.Participants;
-using QuinielaMundial.Domain.Entities;
-using QuinielaMundial.Infrastructure.Persistence;
+using QuinielaMundial.Infrastructure.Data;
 
 namespace QuinielaMundial.Api.Controllers;
 
 [ApiController]
 [Route("api/participants")]
-public sealed class ParticipantsController(QuinielaDbContext db) : ControllerBase
+public sealed class ParticipantsController(ISqlConnectionFactory connectionFactory) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<ParticipantResponse>>> GetAll(CancellationToken cancellationToken)
     {
-        var participants = await db.Participants
-            .OrderBy(x => x.Name)
-            .Select(x => new ParticipantResponse(x.Id, x.Name, x.Email, x.CreatedAtUtc))
-            .ToListAsync(cancellationToken);
+        const string sql = """
+            SELECT Id, Name, Email, CreatedAtUtc
+            FROM dbo.Participants
+            ORDER BY Name;
+            """;
 
-        return Ok(participants);
+        using var connection = connectionFactory.CreateConnection();
+        var participants = await connection.QueryAsync<ParticipantResponse>(new CommandDefinition(sql, cancellationToken: cancellationToken));
+
+        return Ok(participants.ToList());
     }
 
     [HttpPost]
@@ -29,16 +32,22 @@ public sealed class ParticipantsController(QuinielaDbContext db) : ControllerBas
             return BadRequest("El nombre del participante es obligatorio.");
         }
 
-        var participant = new Participant
-        {
-            Name = request.Name.Trim(),
-            Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim()
-        };
+        const string sql = """
+            INSERT INTO dbo.Participants (Name, Email)
+            OUTPUT INSERTED.Id, INSERTED.Name, INSERTED.Email, INSERTED.CreatedAtUtc
+            VALUES (@Name, @Email);
+            """;
 
-        db.Participants.Add(participant);
-        await db.SaveChangesAsync(cancellationToken);
+        using var connection = connectionFactory.CreateConnection();
+        var response = await connection.QuerySingleAsync<ParticipantResponse>(new CommandDefinition(
+            sql,
+            new
+            {
+                Name = request.Name.Trim(),
+                Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim()
+            },
+            cancellationToken: cancellationToken));
 
-        var response = new ParticipantResponse(participant.Id, participant.Name, participant.Email, participant.CreatedAtUtc);
-        return CreatedAtAction(nameof(GetAll), new { id = participant.Id }, response);
+        return CreatedAtAction(nameof(GetAll), new { id = response.Id }, response);
     }
 }
