@@ -8,7 +8,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("Frontend", policy => policy
+    options.AddPolicy("CorsPolicy", policy => policy
         .WithOrigins(builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [])
         .AllowAnyHeader()
         .AllowAnyMethod());
