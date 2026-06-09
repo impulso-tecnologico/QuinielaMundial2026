@@ -34,9 +34,9 @@ public sealed class PredictionsController(ISqlConnectionFactory connectionFactor
                 p.AwayScore,
                 CASE
                     WHEN p.HomeScore IS NULL OR p.AwayScore IS NULL OR m.HomeScore IS NULL OR m.AwayScore IS NULL THEN NULL
-                    WHEN p.HomeScore = m.HomeScore AND p.AwayScore = m.AwayScore THEN 3
-                    WHEN SIGN(p.HomeScore - p.AwayScore) = SIGN(m.HomeScore - m.AwayScore) THEN 1
-                    ELSE 0
+                    ELSE
+                        CASE WHEN SIGN(p.HomeScore - p.AwayScore) = SIGN(m.HomeScore - m.AwayScore) THEN 1 ELSE 0 END +
+                        CASE WHEN p.HomeScore = m.HomeScore AND p.AwayScore = m.AwayScore THEN 1 ELSE 0 END
                 END AS Points,
                 p.UpdatedAtUtc
             FROM dbo.Predictions p
@@ -109,9 +109,9 @@ public sealed class PredictionsController(ISqlConnectionFactory connectionFactor
         const string pointsSql = """
             SELECT CASE
                 WHEN p.HomeScore IS NULL OR p.AwayScore IS NULL OR m.HomeScore IS NULL OR m.AwayScore IS NULL THEN NULL
-                WHEN p.HomeScore = m.HomeScore AND p.AwayScore = m.AwayScore THEN 3
-                WHEN SIGN(p.HomeScore - p.AwayScore) = SIGN(m.HomeScore - m.AwayScore) THEN 1
-                ELSE 0
+                ELSE
+                    CASE WHEN SIGN(p.HomeScore - p.AwayScore) = SIGN(m.HomeScore - m.AwayScore) THEN 1 ELSE 0 END +
+                    CASE WHEN p.HomeScore = m.HomeScore AND p.AwayScore = m.AwayScore THEN 1 ELSE 0 END
             END
             FROM dbo.Predictions p
             INNER JOIN dbo.Matches m ON m.Id = p.MatchId

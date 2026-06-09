@@ -36,15 +36,14 @@
       </div>
 
       <div class="acciones" style="margin-top: 14px;">
-        <button class="btn-secondary" id="btnResultados">Modo resultados</button>
-        <button class="btn-secondary" id="btnExportar">Exportar</button>
-        <button class="btn-secondary" id="btnImportar">Importar</button>
+        <button class="btn-primary" id="btnGuardarPredicciones">Guardar predicciones</button>
+        <button class="btn-secondary" onclick="window.location.href='ranking.html'">Ver resultados</button>
         <button class="btn-secondary" onclick="window.print()">Imprimir</button>
         <button class="btn-danger" id="btnLimpiar">Limpiar</button>
-        <input type="file" id="archivoImportar" accept="application/json" class="oculto" />
       </div>
+      <div class="guardar-estado" id="guardarEstado" aria-live="polite"></div>
 
-      <div class="resumen">
+      <div class="resumen hide">
         <div class="stat">
           <span>Partidos</span>
           <strong id="totalPartidos">72</strong>
@@ -63,11 +62,6 @@
         </div>
       </div>
 
-      <div class="reglas">
-        <strong>Reglas sugeridas:</strong> 3 puntos por marcador exacto, 1 punto por acertar ganador o empate, 0 puntos si no coincide. 
-        El modo resultados sirve para capturar el marcador real y calcular los puntos.
-      </div>
-
       <div class="section-title">
         <h2>Partidos de fase de grupos</h2>
         <small id="contadorVista"></small>
@@ -75,17 +69,37 @@
 
       <div class="partidos" id="partidos"></div>
 
+      <div class="generar-finales">
+        <button class="btn-primary" id="btnGenerarFasesFinales">Generar fases finales</button>
+      </div>
+
       <div class="section-title">
         <h2>Llaves de eliminación directa</h2>
         <small id="estadoEliminatorias"></small>
       </div>
 
       <div class="eliminatorias" id="eliminatorias"></div>
-    </section>
 
-    <p class="footer-note">
-      Los datos se guardan en el navegador usando localStorage. Si cambias de computadora o navegador, exporta tu quiniela.
-    </p>
+      <div class="section-title">
+        <h2>Premios individuales</h2>
+        <small>Pronóstico final</small>
+      </div>
+
+      <div class="premios-grid">
+        <div>
+          <label for="balonOro">Balón de oro</label>
+          <input id="balonOro" type="text" maxlength="160" placeholder="Jugador" />
+        </div>
+        <div>
+          <label for="botaOro">Bota de oro</label>
+          <input id="botaOro" type="text" maxlength="160" placeholder="Jugador" />
+        </div>
+        <div>
+          <label for="guanteOro">Guante de oro</label>
+          <input id="guanteOro" type="text" maxlength="160" placeholder="Portero" />
+        </div>
+      </div>
+    </section>
   </main>
 
   <script src="app.js"></script>

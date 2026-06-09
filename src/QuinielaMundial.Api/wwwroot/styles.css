@@ -152,6 +152,23 @@ button:hover {
   color: var(--rojo);
 }
 
+.guardar-estado {
+  min-height: 20px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.guardar-estado.ok {
+  color: var(--verde-oscuro);
+}
+
+.guardar-estado.error {
+  color: var(--rojo);
+}
+
 .resumen {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -179,17 +196,6 @@ button:hover {
   display: block;
   font-size: 28px;
   margin-top: 4px;
-}
-
-.reglas {
-  margin: 18px 0;
-  background: #fff8df;
-  border: 1px solid #f2df98;
-  color: #6f5100;
-  border-radius: 16px;
-  padding: 14px 16px;
-  font-size: 14px;
-  line-height: 1.45;
 }
 
 .section-title {
@@ -279,8 +285,7 @@ button:hover {
   font-weight: 900;
 }
 
-.pronostico,
-.resultado-real {
+.pronostico {
   display: grid;
   grid-template-columns: 1fr 80px 32px 80px 1fr;
   align-items: center;
@@ -290,24 +295,13 @@ button:hover {
   padding: 10px;
 }
 
-.resultado-real {
-  background: #f9f0f0;
-  border: 1px dashed #e6b8b8;
-  display: none;
-}
-
-body.modo-resultados .resultado-real {
-  display: grid;
-}
-
 .caption {
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
 }
 
-.pronostico input,
-.resultado-real input {
+.pronostico input {
   text-align: center;
   font-weight: 800;
   padding: 10px 6px;
@@ -325,21 +319,10 @@ body.modo-resultados .resultado-real {
   line-height: 1.35;
 }
 
-.puntos {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.generar-finales {
+  display: flex;
   justify-content: flex-end;
-  color: var(--verde-oscuro);
-  font-weight: 900;
-}
-
-.puntos-badge {
-  background: #e6f6ee;
-  color: var(--verde-oscuro);
-  border-radius: 999px;
-  padding: 7px 10px;
-  font-size: 13px;
+  margin-top: 16px;
 }
 
 .oculto {
@@ -355,7 +338,7 @@ body.modo-resultados .resultado-real {
 
 .eliminatorias {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 14px;
   align-items: start;
 }
@@ -396,23 +379,25 @@ body.modo-resultados .resultado-real {
 }
 
 .cruce-equipo {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
   font-weight: 800;
   line-height: 1.35;
 }
 
 .cruce-equipo span {
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .cruce-marcador {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: minmax(72px, auto) 46px;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
+  justify-self: end;
 }
 
 .cruce-marcador small {
@@ -438,13 +423,130 @@ body.modo-resultados .resultado-real {
   line-height: 1.45;
 }
 
+.premios-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  background: #f8fbfa;
+  border: 1px solid var(--borde);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.ranking-dashboard {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.podium-card {
+  background: linear-gradient(180deg, #ffffff, #f8fbfa);
+  border: 1px solid var(--borde);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
+}
+
+.podium-card:nth-child(2) {
+  min-height: 150px;
+  border-color: #f2df98;
+  background: linear-gradient(180deg, #fff8df, #ffffff);
+}
+
+.podium-card:first-child,
+.podium-card:nth-child(3) {
+  min-height: 125px;
+}
+
+.podium-position {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--verde);
+  color: white;
+  font-weight: 900;
+}
+
+.podium-name {
+  margin-top: 12px;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.podium-points {
+  margin-top: 4px;
+  color: var(--verde-oscuro);
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.podium-meta {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ranking-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--borde);
+  border-radius: 18px;
+  background: white;
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.ranking-table th,
+.ranking-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #edf2f0;
+  text-align: left;
+}
+
+.ranking-table th {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ranking-table td {
+  font-weight: 700;
+}
+
+.ranking-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.ranking-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 18px;
+}
+
 @media (max-width: 900px) {
-  .toolbar,
-  .resumen,
-  .partidos,
-  .eliminatorias {
-    grid-template-columns: 1fr;
-  }
+      .toolbar,
+      .resumen,
+      .partidos,
+      .podium,
+      .premios-grid,
+      .eliminatorias {
+        grid-template-columns: 1fr;
+      }
 
   .acciones {
     justify-content: stretch;
@@ -452,6 +554,10 @@ body.modo-resultados .resultado-real {
 
   .acciones button {
     flex: 1;
+  }
+
+  .generar-finales button {
+    width: 100%;
   }
 }
 
@@ -464,8 +570,7 @@ body.modo-resultados .resultado-real {
     font-size: 15px;
   }
 
-  .pronostico,
-  .resultado-real {
+  .pronostico {
     grid-template-columns: 1fr 58px 20px 58px 1fr;
   }
 }
@@ -473,7 +578,6 @@ body.modo-resultados .resultado-real {
 @media print {
   .toolbar,
   .acciones,
-  .reglas,
   .footer-note {
     display: none;
   }

@@ -16,6 +16,8 @@ SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO
 
+IF OBJECT_ID(N'dbo.KnockoutPredictions', N'U') IS NOT NULL DROP TABLE dbo.KnockoutPredictions;
+IF OBJECT_ID(N'dbo.AwardPredictions', N'U') IS NOT NULL DROP TABLE dbo.AwardPredictions;
 IF OBJECT_ID(N'dbo.Predictions', N'U') IS NOT NULL DROP TABLE dbo.Predictions;
 IF OBJECT_ID(N'dbo.Matches', N'U') IS NOT NULL DROP TABLE dbo.Matches;
 IF OBJECT_ID(N'dbo.TournamentStages', N'U') IS NOT NULL DROP TABLE dbo.TournamentStages;
@@ -112,6 +114,39 @@ GO
 
 CREATE UNIQUE INDEX UX_Predictions_Participant_Match ON dbo.Predictions (ParticipantId, MatchId);
 CREATE INDEX IX_Predictions_MatchId ON dbo.Predictions (MatchId);
+GO
+
+CREATE TABLE dbo.KnockoutPredictions
+(
+    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_KnockoutPredictions PRIMARY KEY,
+    ParticipantId INT NOT NULL,
+    BracketMatchNumber INT NOT NULL,
+    HomeScore INT NULL,
+    AwayScore INT NULL,
+    UpdatedAtUtc DATETIME2(0) NOT NULL CONSTRAINT DF_KnockoutPredictions_UpdatedAtUtc DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT FK_KnockoutPredictions_Participants FOREIGN KEY (ParticipantId) REFERENCES dbo.Participants (Id) ON DELETE CASCADE,
+    CONSTRAINT CK_KnockoutPredictions_BracketMatchNumber CHECK (BracketMatchNumber BETWEEN 1 AND 32),
+    CONSTRAINT CK_KnockoutPredictions_HomeScore CHECK (HomeScore IS NULL OR HomeScore >= 0),
+    CONSTRAINT CK_KnockoutPredictions_AwayScore CHECK (AwayScore IS NULL OR AwayScore >= 0)
+);
+GO
+
+CREATE UNIQUE INDEX UX_KnockoutPredictions_Participant_Match ON dbo.KnockoutPredictions (ParticipantId, BracketMatchNumber);
+GO
+
+CREATE TABLE dbo.AwardPredictions
+(
+    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AwardPredictions PRIMARY KEY,
+    ParticipantId INT NOT NULL,
+    BallonDOr NVARCHAR(160) NULL,
+    GoldenBoot NVARCHAR(160) NULL,
+    GoldenGlove NVARCHAR(160) NULL,
+    UpdatedAtUtc DATETIME2(0) NOT NULL CONSTRAINT DF_AwardPredictions_UpdatedAtUtc DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT FK_AwardPredictions_Participants FOREIGN KEY (ParticipantId) REFERENCES dbo.Participants (Id) ON DELETE CASCADE
+);
+GO
+
+CREATE UNIQUE INDEX UX_AwardPredictions_Participant ON dbo.AwardPredictions (ParticipantId);
 GO
 
 INSERT INTO dbo.TournamentStages (Code, Name, SortOrder)

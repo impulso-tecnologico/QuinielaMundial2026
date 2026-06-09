@@ -1,5 +1,4 @@
 const API_BASE = "";
-const STORAGE_KEY = "quiniela_mundial_2026_frontend";
 
 const $ = (selector) => document.querySelector(selector);
 const contenedor = $("#partidos");
@@ -7,13 +6,23 @@ const eliminatorias = $("#eliminatorias");
 const grupoFiltro = $("#grupoFiltro");
 const buscar = $("#buscar");
 const participante = $("#participante");
+const guardarEstado = $("#guardarEstado");
+const balonOro = $("#balonOro");
+const botaOro = $("#botaOro");
+const guanteOro = $("#guanteOro");
 
 let partidos = [];
 let estado = {
   participante: "",
   participantId: null,
   pronosticos: {},
-  eliminatorias: {}
+  eliminatorias: {},
+  eliminatoriasGeneradas: false,
+  premios: {
+    balonOro: "",
+    botaOro: "",
+    guanteOro: ""
+  }
 };
 
 const llavesRonda32 = [
@@ -54,22 +63,9 @@ const avanceLlaves = [
   { ronda: "Final", partido: 32, equipo1: "Ganador 29", equipo2: "Ganador 30" }
 ];
 
-function cargarEstadoLocal() {
-  try {
-    const guardado = localStorage.getItem(STORAGE_KEY);
-    if (guardado) estado = { ...estado, ...JSON.parse(guardado) };
-  } catch {
-    estado = { participante: "", participantId: null, pronosticos: {} };
-  }
-
-  if (!estado.eliminatorias || typeof estado.eliminatorias !== "object") estado.eliminatorias = {};
-
-  participante.value = estado.participante || "";
-}
-
-function guardarEstadoLocal() {
-  estado.participante = participante.value.trim();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(estado));
+function reiniciarEstadoSesion() {
+  estado = { participante: "", participantId: null, pronosticos: {}, eliminatorias: {}, eliminatoriasGeneradas: false, premios: { balonOro: "", botaOro: "", guanteOro: "" } };
+  actualizarInputsPremios();
 }
 
 async function apiJson(url, options = {}) {
@@ -124,7 +120,12 @@ async function cargarPartidos() {
   });
 }
 
-async function asegurarParticipante() {
+function mostrarEstadoGuardado(mensaje, tipo = "") {
+  guardarEstado.textContent = mensaje;
+  guardarEstado.className = `guardar-estado ${tipo}`.trim();
+}
+
+async function asegurarParticipante(cargarDatos = true) {
   const nombre = participante.value.trim();
   if (!nombre) {
     alert("Captura el nombre del participante antes de guardar.");
@@ -142,8 +143,7 @@ async function asegurarParticipante() {
   estado.participantId = creado.id;
   estado.participante = creado.name;
   participante.value = creado.name;
-  guardarEstadoLocal();
-  await cargarPronosticos();
+  if (cargarDatos) await cargarPronosticos();
   return estado.participantId;
 }
 
@@ -157,7 +157,39 @@ async function cargarPronosticos() {
     p.predVisitante = normalizarMarcador(prediccion.awayScore);
   });
 
-  guardarEstadoLocal();
+  await cargarPronosticosEliminatorias();
+  await cargarPronosticosPremios();
+}
+
+async function cargarPronosticosEliminatorias() {
+  if (!estado.participantId) return;
+
+  estado.eliminatorias = {};
+  const data = await apiJson(`/api/participants/${estado.participantId}/knockout-predictions`);
+  data.forEach(prediccion => {
+    estado.eliminatorias[prediccion.bracketMatchNumber] = {
+      local: normalizarMarcador(prediccion.homeScore),
+      visitante: normalizarMarcador(prediccion.awayScore)
+    };
+  });
+}
+
+async function cargarPronosticosPremios() {
+  if (!estado.participantId) return;
+
+  const data = await apiJson(`/api/participants/${estado.participantId}/award-predictions`);
+  estado.premios = {
+    balonOro: data?.ballonDOr || "",
+    botaOro: data?.goldenBoot || "",
+    guanteOro: data?.goldenGlove || ""
+  };
+  actualizarInputsPremios();
+}
+
+function actualizarInputsPremios() {
+  balonOro.value = estado.premios?.balonOro || "";
+  botaOro.value = estado.premios?.botaOro || "";
+  guanteOro.value = estado.premios?.guanteOro || "";
 }
 
 function llenarGrupos() {
@@ -237,7 +269,6 @@ function renderizarPartidos() {
 
   filtrados.forEach(partido => {
     const p = obtenerPronostico(partido.id);
-    const puntos = calcularPuntos(partido.id);
     const card = document.createElement("article");
     card.className = "partido";
     card.innerHTML = `
@@ -267,20 +298,8 @@ function renderizarPartidos() {
         </div>
       </div>
 
-      <div>
-        <div class="caption">Resultado real</div>
-        <div class="resultado-real">
-          <span class="caption">${partido.local}</span>
-          <input type="number" min="0" inputmode="numeric" data-id="${partido.id}" data-campo="realLocal" value="${p.realLocal}" placeholder="0">
-          <span class="separador">-</span>
-          <input type="number" min="0" inputmode="numeric" data-id="${partido.id}" data-campo="realVisitante" value="${p.realVisitante}" placeholder="0">
-          <span class="caption">${partido.visitante}</span>
-        </div>
-      </div>
-
       <div class="partido-header">
         <div class="sede">${partido.estadio}<br>${partido.ciudad}</div>
-        <div class="puntos"><span class="puntos-badge">${puntos === null ? "Sin puntos" : puntos + " pts"}</span></div>
       </div>
     `;
 
@@ -301,50 +320,12 @@ function activarEventosInputs() {
       const id = e.target.dataset.id;
       const campo = e.target.dataset.campo;
       obtenerPronostico(id)[campo] = e.target.value;
-      guardarEstadoLocal();
+      if (campo === "predLocal" || campo === "predVisitante") estado.eliminatoriasGeneradas = false;
       actualizarResumen();
       renderizarEliminatorias();
-
-      const puntos = calcularPuntos(id);
-      const badge = e.target.closest(".partido").querySelector(".puntos-badge");
-      badge.textContent = puntos === null ? "Sin puntos" : `${puntos} pts`;
     });
 
-    input.addEventListener("change", guardarMarcadorEnApi);
   });
-}
-
-async function guardarMarcadorEnApi(e) {
-  const id = e.target.dataset.id;
-  const campo = e.target.dataset.campo;
-  const p = obtenerPronostico(id);
-
-  try {
-    const participantId = await asegurarParticipante();
-    if (!participantId) return;
-
-    if (campo.startsWith("pred")) {
-      await apiJson(`/api/participants/${participantId}/predictions/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          homeScore: valorNumero(p.predLocal),
-          awayScore: valorNumero(p.predVisitante)
-        })
-      });
-      return;
-    }
-
-    await apiJson(`/api/matches/${id}/result`, {
-      method: "PUT",
-      body: JSON.stringify({
-        homeScore: valorNumero(p.realLocal),
-        awayScore: valorNumero(p.realVisitante),
-        registeredByParticipantId: participantId
-      })
-    });
-  } catch (error) {
-    alert(`No se pudo guardar en la base de datos. ${error.message}`);
-  }
 }
 
 function actualizarResumen() {
@@ -371,7 +352,7 @@ function actualizarResumen() {
 
 function crearTablaGrupos() {
   const grupos = {};
-  let partidosConResultado = 0;
+  let partidosConPronostico = 0;
 
   partidos.filter(partido => partido.grupo).forEach(partido => {
     if (!grupos[partido.grupo]) grupos[partido.grupo] = {};
@@ -393,30 +374,30 @@ function crearTablaGrupos() {
     });
 
     const p = obtenerPronostico(partido.id);
-    const realLocal = valorNumero(p.realLocal);
-    const realVisitante = valorNumero(p.realVisitante);
-    if (realLocal === null || realVisitante === null) return;
+    const predLocal = valorNumero(p.predLocal);
+    const predVisitante = valorNumero(p.predVisitante);
+    if (predLocal === null || predVisitante === null) return;
 
-    partidosConResultado++;
+    partidosConPronostico++;
     const local = grupos[partido.grupo][partido.local];
     const visitante = grupos[partido.grupo][partido.visitante];
 
     local.pj++;
     visitante.pj++;
-    local.gf += realLocal;
-    local.gc += realVisitante;
-    visitante.gf += realVisitante;
-    visitante.gc += realLocal;
+    local.gf += predLocal;
+    local.gc += predVisitante;
+    visitante.gf += predVisitante;
+    visitante.gc += predLocal;
 
-    if (realLocal > realVisitante) local.pts += 3;
-    else if (realVisitante > realLocal) visitante.pts += 3;
+    if (predLocal > predVisitante) local.pts += 3;
+    else if (predVisitante > predLocal) visitante.pts += 3;
     else {
       local.pts++;
       visitante.pts++;
     }
 
-    local.partidos.push({ rival: partido.visitante, gf: realLocal, gc: realVisitante, pts: realLocal > realVisitante ? 3 : realLocal === realVisitante ? 1 : 0 });
-    visitante.partidos.push({ rival: partido.local, gf: realVisitante, gc: realLocal, pts: realVisitante > realLocal ? 3 : realLocal === realVisitante ? 1 : 0 });
+    local.partidos.push({ rival: partido.visitante, gf: predLocal, gc: predVisitante, pts: predLocal > predVisitante ? 3 : predLocal === predVisitante ? 1 : 0 });
+    visitante.partidos.push({ rival: partido.local, gf: predVisitante, gc: predLocal, pts: predVisitante > predLocal ? 3 : predLocal === predVisitante ? 1 : 0 });
   });
 
   Object.values(grupos).forEach(grupo => {
@@ -425,7 +406,7 @@ function crearTablaGrupos() {
     });
   });
 
-  return { grupos, partidosConResultado };
+  return { grupos, partidosConPronostico };
 }
 
 function estadisticaEntreEquipos(equipo, rivales) {
@@ -473,7 +454,7 @@ function compararMejoresTerceros(a, b) {
 }
 
 function obtenerClasificados() {
-  const { grupos, partidosConResultado } = crearTablaGrupos();
+  const { grupos, partidosConPronostico } = crearTablaGrupos();
   const ganadores = [];
   const segundos = [];
   const terceros = [];
@@ -494,7 +475,7 @@ function obtenerClasificados() {
     ganadores,
     segundos,
     mejoresTerceros,
-    partidosConResultado
+    partidosConPronostico
   };
 }
 
@@ -528,13 +509,7 @@ function obtenerMarcadorEliminacion(numero) {
     if (local !== null && visitante !== null && local !== visitante) return { local, visitante };
   }
 
-  const partido = obtenerPartidoEliminacion(numero);
-  if (!partido) return null;
-
-  const p = obtenerPronostico(partido.id);
-  const local = valorNumero(p.realLocal);
-  const visitante = valorNumero(p.realVisitante);
-  return local === null || visitante === null || local === visitante ? null : { local, visitante };
+  return null;
 }
 
 function resolverResultadoLlave(llave, resultados) {
@@ -545,6 +520,10 @@ function resolverResultadoLlave(llave, resultados) {
     ganador: marcador.local > marcador.visitante ? llave.equipos[0] : llave.equipos[1],
     perdedor: marcador.local > marcador.visitante ? llave.equipos[1] : llave.equipos[0]
   };
+}
+
+function llaveTieneGanador(llave) {
+  return obtenerMarcadorEliminacion(llave.partido || llave.id) !== null;
 }
 
 function resolverReferenciaAvance(referencia, resultados) {
@@ -570,7 +549,10 @@ function crearRondasEliminatorias(clasificados) {
 
   dieciseisavos.forEach(llave => resolverResultadoLlave(llave, resultados));
 
-  const avances = avanceLlaves.map(llave => {
+  const rondas = [{ nombre: "Dieciseisavos", cruces: dieciseisavos }];
+  if (!dieciseisavos.every(llaveTieneGanador)) return rondas;
+
+  const crearCrucesAvance = (ronda) => avanceLlaves.filter(llave => llave.ronda === ronda).map(llave => {
     const cruce = {
       id: llave.partido,
       partido: llave.partido,
@@ -581,34 +563,56 @@ function crearRondasEliminatorias(clasificados) {
     return cruce;
   });
 
-  const rondas = ["Dieciseisavos", "Octavos", "Cuartos", "Semifinal", "Tercer lugar", "Final"];
-  return rondas.map(nombre => ({
-    nombre,
-    cruces: [...dieciseisavos, ...avances].filter(llave => llave.ronda === nombre)
-  })).filter(ronda => ronda.cruces.length > 0);
+  const octavos = crearCrucesAvance("Octavos");
+  rondas.push({ nombre: "Octavos", cruces: octavos });
+  if (!octavos.every(llaveTieneGanador)) return rondas;
+
+  const cuartos = crearCrucesAvance("Cuartos");
+  rondas.push({ nombre: "Cuartos", cruces: cuartos });
+  if (!cuartos.every(llaveTieneGanador)) return rondas;
+
+  const semifinal = crearCrucesAvance("Semifinal");
+  rondas.push({ nombre: "Semifinal", cruces: semifinal });
+  if (!semifinal.every(llaveTieneGanador)) return rondas;
+
+  rondas.push({ nombre: "Tercer lugar", cruces: crearCrucesAvance("Tercer lugar") });
+  rondas.push({ nombre: "Final", cruces: crearCrucesAvance("Final") });
+  return rondas;
 }
 
 function renderizarEliminatorias() {
   const clasificados = obtenerClasificados();
-  const { partidosConResultado } = clasificados;
+  const { partidosConPronostico } = clasificados;
   const estadoTexto = $("#estadoEliminatorias");
   const totalGrupos = partidos.filter(partido => partido.grupo).length;
 
-  if (partidosConResultado < totalGrupos) {
-    estadoTexto.textContent = `${partidosConResultado} de ${totalGrupos} resultados capturados`;
+  if (!estado.eliminatoriasGeneradas) {
+    estadoTexto.textContent = `${partidosConPronostico} de ${totalGrupos} pronósticos capturados`;
     eliminatorias.innerHTML = `
       <div class="placeholder" style="grid-column: 1 / -1;">
-        Captura todos los resultados reales de la fase de grupos para generar la llave de 32 clasificados.
+        Captura todos los marcadores de fase de grupos y presiona Generar fases finales.
+      </div>
+    `;
+    return;
+  }
+
+  if (partidosConPronostico < totalGrupos) {
+    estadoTexto.textContent = `${partidosConPronostico} de ${totalGrupos} pronósticos capturados`;
+    eliminatorias.innerHTML = `
+      <div class="placeholder" style="grid-column: 1 / -1;">
+        Captura todos los pronósticos de fase de grupos para generar tu llave de 32 clasificados.
         Se usan puntos, diferencia de goles, goles a favor y goles en contra como criterios de desempate.
       </div>
     `;
     return;
   }
 
-  estadoTexto.textContent = "Matriz oficial";
+  const rondasEliminatorias = crearRondasEliminatorias(clasificados);
+  const ultimaRonda = rondasEliminatorias[rondasEliminatorias.length - 1]?.nombre || "Dieciseisavos";
+  estadoTexto.textContent = ultimaRonda === "Final" ? "Final y tercer lugar abiertos" : `Ronda activa: ${ultimaRonda}`;
   eliminatorias.innerHTML = "";
 
-  crearRondasEliminatorias(clasificados).forEach(ronda => {
+  rondasEliminatorias.forEach(ronda => {
     const columna = document.createElement("section");
     columna.className = "ronda";
     columna.innerHTML = `<h3>${ronda.nombre}</h3>`;
@@ -647,47 +651,101 @@ function activarEventosEliminatorias() {
       const pos = e.target.dataset.pos;
       if (!estado.eliminatorias[llave]) estado.eliminatorias[llave] = { local: "", visitante: "" };
       estado.eliminatorias[llave][pos] = e.target.value;
-      guardarEstadoLocal();
+    });
+
+    input.addEventListener("change", () => {
       renderizarEliminatorias();
     });
   });
 }
 
-function exportarQuiniela() {
-  guardarEstadoLocal();
-  const datos = { torneo: "Mundial 2026", etapa: "Fase de grupos", exportado: new Date().toISOString(), ...estado };
-  const blob = new Blob([JSON.stringify(datos, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  const nombre = estado.participante ? estado.participante.replace(/\s+/g, "_") : "participante";
-  link.href = url;
-  link.download = `quiniela_mundial_2026_${nombre}.json`;
-  link.click();
-  URL.revokeObjectURL(url);
+function generarFasesFinales() {
+  const { partidosConPronostico } = obtenerClasificados();
+  const totalGrupos = partidos.filter(partido => partido.grupo).length;
+
+  if (partidosConPronostico < totalGrupos) {
+    alert(`Faltan ${totalGrupos - partidosConPronostico} pronósticos de fase de grupos.`);
+    return;
+  }
+
+  estado.eliminatoriasGeneradas = true;
+  renderizarEliminatorias();
 }
 
-function importarQuiniela(file) {
-  if (!file) return;
+function obtenerPronosticosGrupoCompletos() {
+  return partidos
+    .filter(partido => partido.grupo)
+    .map(partido => ({ partido, pronostico: obtenerPronostico(partido.id) }))
+    .filter(({ pronostico }) => valorNumero(pronostico.predLocal) !== null && valorNumero(pronostico.predVisitante) !== null);
+}
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const datos = JSON.parse(reader.result);
-      estado = { ...estado, ...datos, pronosticos: datos.pronosticos || {} };
-      participante.value = estado.participante || "";
-      guardarEstadoLocal();
-      renderizarPartidos();
-      alert("Quiniela importada correctamente.");
-    } catch {
-      alert("El archivo no tiene un formato válido.");
-    }
+function obtenerPronosticosEliminatoriaCompletos() {
+  return Object.entries(estado.eliminatorias || {})
+    .map(([llave, marcador]) => ({ llave, marcador }))
+    .filter(({ marcador }) => valorNumero(marcador.local) !== null && valorNumero(marcador.visitante) !== null);
+}
+
+function sincronizarPremiosDesdeInputs() {
+  estado.premios = {
+    balonOro: balonOro.value.trim(),
+    botaOro: botaOro.value.trim(),
+    guanteOro: guanteOro.value.trim()
   };
-  reader.readAsText(file);
+}
+
+async function guardarPredicciones() {
+  try {
+    mostrarEstadoGuardado("Guardando predicciones...");
+    const boton = $("#btnGuardarPredicciones");
+    boton.disabled = true;
+
+    const participantId = await asegurarParticipante(false);
+    if (!participantId) return;
+
+    const grupos = obtenerPronosticosGrupoCompletos();
+    const eliminatoriasGuardables = obtenerPronosticosEliminatoriaCompletos();
+    sincronizarPremiosDesdeInputs();
+
+    await Promise.all(grupos.map(({ partido, pronostico }) => apiJson(`/api/participants/${participantId}/predictions/${partido.id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        homeScore: valorNumero(pronostico.predLocal),
+        awayScore: valorNumero(pronostico.predVisitante)
+      })
+    })));
+
+    await Promise.all(eliminatoriasGuardables.map(({ llave, marcador }) => apiJson(`/api/participants/${participantId}/knockout-predictions/${llave}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        homeScore: valorNumero(marcador.local),
+        awayScore: valorNumero(marcador.visitante)
+      })
+    })));
+
+    await apiJson(`/api/participants/${participantId}/award-predictions`, {
+      method: "PUT",
+      body: JSON.stringify({
+        ballonDOr: estado.premios.balonOro,
+        goldenBoot: estado.premios.botaOro,
+        goldenGlove: estado.premios.guanteOro
+      })
+    });
+
+    mostrarEstadoGuardado(`Guardado: ${grupos.length} pronósticos de grupos, ${eliminatoriasGuardables.length} de eliminatoria y premios individuales.`, "ok");
+  } catch (error) {
+    mostrarEstadoGuardado(`No se pudo guardar. ${error.message}`, "error");
+  } finally {
+    $("#btnGuardarPredicciones").disabled = false;
+  }
 }
 
 participante.addEventListener("input", () => {
   estado.participantId = null;
-  guardarEstadoLocal();
+  estado.pronosticos = {};
+  estado.eliminatorias = {};
+  estado.eliminatoriasGeneradas = false;
+  estado.premios = { balonOro: "", botaOro: "", guanteOro: "" };
+  actualizarInputsPremios();
 });
 participante.addEventListener("change", async () => {
   try {
@@ -699,34 +757,23 @@ participante.addEventListener("change", async () => {
 });
 grupoFiltro.addEventListener("change", renderizarPartidos);
 buscar.addEventListener("input", renderizarPartidos);
+$("#btnGenerarFasesFinales").addEventListener("click", generarFasesFinales);
+balonOro.addEventListener("input", sincronizarPremiosDesdeInputs);
+botaOro.addEventListener("input", sincronizarPremiosDesdeInputs);
+guanteOro.addEventListener("input", sincronizarPremiosDesdeInputs);
 
-$("#btnResultados").addEventListener("click", () => {
-  document.body.classList.toggle("modo-resultados");
-  $("#btnResultados").textContent = document.body.classList.contains("modo-resultados")
-    ? "Ocultar resultados"
-    : "Modo resultados";
-});
-
-$("#btnExportar").addEventListener("click", exportarQuiniela);
-$("#btnImportar").addEventListener("click", () => $("#archivoImportar").click());
-$("#archivoImportar").addEventListener("change", (e) => {
-  importarQuiniela(e.target.files[0]);
-  e.target.value = "";
-});
+$("#btnGuardarPredicciones").addEventListener("click", guardarPredicciones);
 
 $("#btnLimpiar").addEventListener("click", () => {
-  if (!confirm("¿Seguro que deseas borrar los datos locales de esta quiniela?")) return;
-  localStorage.removeItem(STORAGE_KEY);
-  estado = { participante: "", participantId: null, pronosticos: {}, eliminatorias: {} };
+  if (!confirm("¿Seguro que deseas limpiar los datos de esta ventana?")) return;
+  reiniciarEstadoSesion();
   participante.value = "";
   renderizarPartidos();
 });
 
 async function iniciar() {
   try {
-    cargarEstadoLocal();
     await cargarPartidos();
-    if (estado.participantId) await cargarPronosticos();
     llenarGrupos();
     renderizarPartidos();
   } catch (error) {
