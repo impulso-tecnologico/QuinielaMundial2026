@@ -36,12 +36,12 @@ const llavesRonda32 = [
   { id: 8, ronda: "Dieciseisavos", equipo1: "1G", equipo2: "3 AEHIJ" },
   { id: 9, ronda: "Dieciseisavos", equipo1: "1C", equipo2: "2F" },
   { id: 10, ronda: "Dieciseisavos", equipo1: "2E", equipo2: "2I" },
-  { id: 11, ronda: "Dieciseisavos", equipo1: "1A", equipo2: "3 CEFH" },
+  { id: 11, ronda: "Dieciseisavos", equipo1: "1A", equipo2: "3 CEFHI" },
   { id: 12, ronda: "Dieciseisavos", equipo1: "1L", equipo2: "3 EHIJK" },
   { id: 13, ronda: "Dieciseisavos", equipo1: "1J", equipo2: "2H" },
   { id: 14, ronda: "Dieciseisavos", equipo1: "2D", equipo2: "2G" },
   { id: 15, ronda: "Dieciseisavos", equipo1: "1B", equipo2: "3 EFGIJ" },
-  { id: 16, ronda: "Dieciseisavos", equipo1: "1K", equipo2: "3 DEIJ" }
+  { id: 16, ronda: "Dieciseisavos", equipo1: "1K", equipo2: "3 DEIJL" }
 ];
 
 const avanceLlaves = [
