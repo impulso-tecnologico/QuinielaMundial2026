@@ -158,6 +158,7 @@ async function cargarPronosticos() {
   });
 
   await cargarPronosticosEliminatorias();
+  await cargarCrucesEliminatorias();
   await cargarPronosticosPremios();
 }
 
@@ -172,6 +173,13 @@ async function cargarPronosticosEliminatorias() {
       visitante: normalizarMarcador(prediccion.awayScore)
     };
   });
+}
+
+async function cargarCrucesEliminatorias() {
+  if (!estado.participantId) return;
+
+  const data = await apiJson(`/api/participants/${estado.participantId}/knockout-brackets`);
+  estado.eliminatoriasGeneradas = Array.isArray(data) && data.length > 0;
 }
 
 async function cargarPronosticosPremios() {
@@ -672,6 +680,23 @@ function generarFasesFinales() {
   renderizarEliminatorias();
 }
 
+function obtenerCrucesEliminatoriasGenerados() {
+  if (!estado.eliminatoriasGeneradas) return [];
+
+  const clasificados = obtenerClasificados();
+  const totalGrupos = partidos.filter(partido => partido.grupo).length;
+  if (clasificados.partidosConPronostico < totalGrupos) return [];
+
+  return crearRondasEliminatorias(clasificados).flatMap(ronda => ronda.cruces.map(cruce => ({
+    bracketMatchNumber: cruce.partido,
+    roundName: ronda.nombre,
+    homeTeamName: cruce.equipos[0]?.equipo || "Por definir",
+    awayTeamName: cruce.equipos[1]?.equipo || "Por definir",
+    homeSource: cruce.equipos[0]?.origen || null,
+    awaySource: cruce.equipos[1]?.origen || null
+  })));
+}
+
 function obtenerPronosticosGrupoCompletos() {
   return partidos
     .filter(partido => partido.grupo)
@@ -704,6 +729,7 @@ async function guardarPredicciones() {
 
     const grupos = obtenerPronosticosGrupoCompletos();
     const eliminatoriasGuardables = obtenerPronosticosEliminatoriaCompletos();
+    const crucesEliminatoria = obtenerCrucesEliminatoriasGenerados();
     sincronizarPremiosDesdeInputs();
 
     await Promise.all(grupos.map(({ partido, pronostico }) => apiJson(`/api/participants/${participantId}/predictions/${partido.id}`, {
@@ -722,6 +748,11 @@ async function guardarPredicciones() {
       })
     })));
 
+    await apiJson(`/api/participants/${participantId}/knockout-brackets`, {
+      method: "PUT",
+      body: JSON.stringify({ brackets: crucesEliminatoria })
+    });
+
     await apiJson(`/api/participants/${participantId}/award-predictions`, {
       method: "PUT",
       body: JSON.stringify({
@@ -731,7 +762,7 @@ async function guardarPredicciones() {
       })
     });
 
-    mostrarEstadoGuardado(`Guardado: ${grupos.length} pronósticos de grupos, ${eliminatoriasGuardables.length} de eliminatoria y premios individuales.`, "ok");
+    mostrarEstadoGuardado(`Guardado: ${grupos.length} pronósticos de grupos, ${crucesEliminatoria.length} cruces, ${eliminatoriasGuardables.length} marcadores de eliminatoria y premios individuales.`, "ok");
   } catch (error) {
     mostrarEstadoGuardado(`No se pudo guardar. ${error.message}`, "error");
   } finally {

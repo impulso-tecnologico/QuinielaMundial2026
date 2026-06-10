@@ -17,6 +17,7 @@ SET QUOTED_IDENTIFIER ON;
 GO
 
 IF OBJECT_ID(N'dbo.KnockoutPredictions', N'U') IS NOT NULL DROP TABLE dbo.KnockoutPredictions;
+IF OBJECT_ID(N'dbo.ParticipantKnockoutBrackets', N'U') IS NOT NULL DROP TABLE dbo.ParticipantKnockoutBrackets;
 IF OBJECT_ID(N'dbo.AwardPredictions', N'U') IS NOT NULL DROP TABLE dbo.AwardPredictions;
 IF OBJECT_ID(N'dbo.Predictions', N'U') IS NOT NULL DROP TABLE dbo.Predictions;
 IF OBJECT_ID(N'dbo.Matches', N'U') IS NOT NULL DROP TABLE dbo.Matches;
@@ -63,6 +64,7 @@ CREATE TABLE dbo.Matches
 (
     Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Matches PRIMARY KEY,
     MatchNumber INT NOT NULL,
+    BracketMatchNumber INT NULL,
     StageId INT NOT NULL,
     [Group] NVARCHAR(2) NULL,
     HomeTeamId INT NULL,
@@ -82,6 +84,7 @@ CREATE TABLE dbo.Matches
     CONSTRAINT FK_Matches_AwayTeam FOREIGN KEY (AwayTeamId) REFERENCES dbo.Teams (Id),
     CONSTRAINT FK_Matches_ResultRegisteredBy FOREIGN KEY (ResultRegisteredByParticipantId) REFERENCES dbo.Participants (Id),
     CONSTRAINT CK_Matches_MatchNumber CHECK (MatchNumber > 0),
+    CONSTRAINT CK_Matches_BracketMatchNumber CHECK (BracketMatchNumber IS NULL OR BracketMatchNumber BETWEEN 1 AND 32),
     CONSTRAINT CK_Matches_HomeScore CHECK (HomeScore IS NULL OR HomeScore >= 0),
     CONSTRAINT CK_Matches_AwayScore CHECK (AwayScore IS NULL OR AwayScore >= 0),
     CONSTRAINT CK_Matches_DifferentTeams CHECK (HomeTeamId IS NULL OR AwayTeamId IS NULL OR HomeTeamId <> AwayTeamId),
@@ -92,6 +95,7 @@ CREATE TABLE dbo.Matches
 GO
 
 CREATE UNIQUE INDEX UX_Matches_MatchNumber ON dbo.Matches (MatchNumber);
+CREATE UNIQUE INDEX UX_Matches_BracketMatchNumber ON dbo.Matches (BracketMatchNumber) WHERE BracketMatchNumber IS NOT NULL;
 CREATE INDEX IX_Matches_Stage_Group ON dbo.Matches (StageId, [Group], MatchNumber);
 CREATE INDEX IX_Matches_HomeTeamId ON dbo.Matches (HomeTeamId);
 CREATE INDEX IX_Matches_AwayTeamId ON dbo.Matches (AwayTeamId);
@@ -132,6 +136,31 @@ CREATE TABLE dbo.KnockoutPredictions
 GO
 
 CREATE UNIQUE INDEX UX_KnockoutPredictions_Participant_Match ON dbo.KnockoutPredictions (ParticipantId, BracketMatchNumber);
+GO
+
+CREATE TABLE dbo.ParticipantKnockoutBrackets
+(
+    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_ParticipantKnockoutBrackets PRIMARY KEY,
+    ParticipantId INT NOT NULL,
+    BracketMatchNumber INT NOT NULL,
+    RoundName NVARCHAR(80) NOT NULL,
+    HomeTeamId INT NULL,
+    AwayTeamId INT NULL,
+    HomeTeamName NVARCHAR(160) NOT NULL,
+    AwayTeamName NVARCHAR(160) NOT NULL,
+    HomeSource NVARCHAR(120) NULL,
+    AwaySource NVARCHAR(120) NULL,
+    UpdatedAtUtc DATETIME2(0) NOT NULL CONSTRAINT DF_ParticipantKnockoutBrackets_UpdatedAtUtc DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT FK_ParticipantKnockoutBrackets_Participants FOREIGN KEY (ParticipantId) REFERENCES dbo.Participants (Id) ON DELETE CASCADE,
+    CONSTRAINT FK_ParticipantKnockoutBrackets_HomeTeam FOREIGN KEY (HomeTeamId) REFERENCES dbo.Teams (Id),
+    CONSTRAINT FK_ParticipantKnockoutBrackets_AwayTeam FOREIGN KEY (AwayTeamId) REFERENCES dbo.Teams (Id),
+    CONSTRAINT CK_ParticipantKnockoutBrackets_BracketMatchNumber CHECK (BracketMatchNumber BETWEEN 1 AND 32),
+    CONSTRAINT CK_ParticipantKnockoutBrackets_DifferentTeams CHECK (HomeTeamId IS NULL OR AwayTeamId IS NULL OR HomeTeamId <> AwayTeamId)
+);
+GO
+
+CREATE UNIQUE INDEX UX_ParticipantKnockoutBrackets_Participant_Match
+ON dbo.ParticipantKnockoutBrackets (ParticipantId, BracketMatchNumber);
 GO
 
 CREATE TABLE dbo.AwardPredictions

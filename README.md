@@ -50,8 +50,19 @@ Las relaciones principales son por Id:
 - `Matches.ResultRegisteredByParticipantId` -> `Participants.Id`
 - `Predictions.ParticipantId` -> `Participants.Id`
 - `Predictions.MatchId` -> `Matches.Id`
+- `ParticipantKnockoutBrackets.ParticipantId` -> `Participants.Id`
+- `ParticipantKnockoutBrackets.HomeTeamId` -> `Teams.Id`
+- `ParticipantKnockoutBrackets.AwayTeamId` -> `Teams.Id`
 
 Los resultados aceptan `0` porque `HomeScore` y `AwayScore` permiten valores `>= 0`.
+
+`Matches.BracketMatchNumber` identifica el slot oficial de la llave de eliminación directa. Cuando se carguen partidos reales de knockout, ese campo permite comparar contra los cruces guardados del participante.
+
+Si la base ya existe, ejecuta los scripts incrementales según aplique:
+
+- `database_update_knockout_predictions.sql`
+- `database_update_award_predictions.sql`
+- `database_update_knockout_brackets.sql`
 
 ## Endpoints iniciales
 
@@ -61,8 +72,20 @@ Los resultados aceptan `0` porque `HomeScore` y `AwayScore` permiten valores `>=
 - `POST /api/participants`: crea participante.
 - `GET /api/participants/{participantId}/predictions`: lista pronósticos.
 - `PUT /api/participants/{participantId}/predictions/{matchId}`: crea o actualiza pronóstico.
+- `GET /api/participants/{participantId}/knockout-brackets`: lista cruces de knockout generados por el participante.
+- `PUT /api/participants/{participantId}/knockout-brackets`: guarda los cruces de knockout generados por el participante.
+- `GET /api/participants/{participantId}/knockout-predictions`: lista marcadores pronosticados de knockout.
+- `PUT /api/participants/{participantId}/knockout-predictions/{bracketMatchNumber}`: crea o actualiza marcador pronosticado de knockout.
 - `GET /api/standings/groups`: calcula tablas de grupos desde resultados.
 - `GET /api/knockout`: proyecta dieciseisavos desde los resultados capturados.
+
+## Puntuación de knockout acordada
+
+Los cruces generados se guardan en `ParticipantKnockoutBrackets` al presionar `Guardar predicciones`. Esto permite evaluar después contra partidos reales de `Matches` con `BracketMatchNumber`:
+
+- 1 punto si acierta el cruce exacto.
+- 1 punto si acierta quién pasa de ronda, solo si acertó el cruce exacto.
+- 1 punto si acierta marcador exacto, solo si acertó el cruce exacto.
 
 ## Acceso a datos
 
