@@ -493,7 +493,63 @@ function obtenerClasificados() {
   };
 }
 
-function resolverClasificado(referencia, clasificados, tercerosAsignados) {
+function esReferenciaTercero(referencia) {
+  return referencia.startsWith("3 ");
+}
+
+function crearClaveTercero(partido, posicion) {
+  return `${partido}:${posicion}`;
+}
+
+function asignarTercerosALlave(llaves, clasificados) {
+  const slots = [];
+
+  llaves.forEach(llave => {
+    [llave.equipo1, llave.equipo2].forEach((referencia, posicion) => {
+      if (!esReferenciaTercero(referencia)) return;
+
+      const gruposPermitidos = new Set((referencia.split(" ")[1] || "").split(""));
+      const candidatos = clasificados.mejoresTerceros.filter(equipo => gruposPermitidos.has(equipo.grupo));
+      slots.push({
+        partido: llave.id,
+        posicion,
+        referencia,
+        candidatos,
+        ordenOriginal: slots.length
+      });
+    });
+  });
+
+  const slotsOrdenados = [...slots].sort((a, b) =>
+    a.candidatos.length - b.candidatos.length || a.ordenOriginal - b.ordenOriginal
+  );
+
+  const asignaciones = new Map();
+  const equiposUsados = new Set();
+
+  function buscar(indice) {
+    if (indice >= slotsOrdenados.length) return true;
+
+    const slot = slotsOrdenados[indice];
+    for (const candidato of slot.candidatos) {
+      if (equiposUsados.has(candidato.equipo)) continue;
+
+      equiposUsados.add(candidato.equipo);
+      asignaciones.set(crearClaveTercero(slot.partido, slot.posicion), candidato);
+
+      if (buscar(indice + 1)) return true;
+
+      asignaciones.delete(crearClaveTercero(slot.partido, slot.posicion));
+      equiposUsados.delete(candidato.equipo);
+    }
+
+    return false;
+  }
+
+  return buscar(0) ? asignaciones : new Map();
+}
+
+function resolverClasificado(referencia, clasificados, tercerosAsignados, terceroAsignado = null) {
   const partes = referencia.split(" ");
   const posicion = Number(partes[0][0]);
 
@@ -501,6 +557,11 @@ function resolverClasificado(referencia, clasificados, tercerosAsignados) {
     const grupo = partes[0][1];
     const equipo = clasificados.tablas[grupo]?.[posicion - 1];
     return equipo ? { ...equipo, origen: `${posicion} Grupo ${grupo}` } : { equipo: referencia, origen: "Por definir" };
+  }
+
+  if (terceroAsignado) {
+    tercerosAsignados.add(terceroAsignado.equipo);
+    return { ...terceroAsignado, origen: `3 Grupo ${terceroAsignado.grupo}` };
   }
 
   const gruposPermitidos = new Set((partes[1] || "").split(""));
@@ -550,14 +611,15 @@ function resolverReferenciaAvance(referencia, resultados) {
 function crearRondasEliminatorias(clasificados) {
   const tercerosAsignados = new Set();
   const resultados = {};
+  const tercerosPorSlot = asignarTercerosALlave(llavesRonda32, clasificados);
 
   const dieciseisavos = llavesRonda32.map(llave => ({
     id: llave.id,
     partido: llave.id,
     ronda: llave.ronda,
     equipos: [
-      resolverClasificado(llave.equipo1, clasificados, tercerosAsignados),
-      resolverClasificado(llave.equipo2, clasificados, tercerosAsignados)
+      resolverClasificado(llave.equipo1, clasificados, tercerosAsignados, tercerosPorSlot.get(crearClaveTercero(llave.id, 0))),
+      resolverClasificado(llave.equipo2, clasificados, tercerosAsignados, tercerosPorSlot.get(crearClaveTercero(llave.id, 1)))
     ]
   }));
 
