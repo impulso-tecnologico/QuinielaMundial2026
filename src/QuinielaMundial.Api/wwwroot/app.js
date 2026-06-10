@@ -263,6 +263,11 @@ function calcularPuntos(id) {
   return resultadoTipo(predLocal, predVisitante) === resultadoTipo(realLocal, realVisitante) ? 1 : 0;
 }
 
+function tieneMarcadorCapturado(id) {
+  const p = obtenerPronostico(id);
+  return p.predLocal !== "" && p.predVisitante !== "";
+}
+
 function renderizarPartidos() {
   const grupo = grupoFiltro.value;
   const texto = normalizarTexto(buscar.value.trim());
@@ -278,7 +283,7 @@ function renderizarPartidos() {
   filtrados.forEach(partido => {
     const p = obtenerPronostico(partido.id);
     const card = document.createElement("article");
-    card.className = "partido";
+    card.className = tieneMarcadorCapturado(partido.id) ? "partido partido-capturado" : "partido";
     card.innerHTML = `
       <div class="partido-header">
         <span class="match-id">Partido ${partido.numero}</span>
@@ -299,9 +304,9 @@ function renderizarPartidos() {
         <div class="caption">Tu pronóstico</div>
         <div class="pronostico">
           <span class="caption">${partido.local}</span>
-          <input type="number" min="0" inputmode="numeric" data-id="${partido.id}" data-campo="predLocal" value="${p.predLocal}" placeholder="0">
+          <input type="number" min="0" inputmode="numeric" data-id="${partido.id}" data-campo="predLocal" value="${p.predLocal}">
           <span class="separador">-</span>
-          <input type="number" min="0" inputmode="numeric" data-id="${partido.id}" data-campo="predVisitante" value="${p.predVisitante}" placeholder="0">
+          <input type="number" min="0" inputmode="numeric" data-id="${partido.id}" data-campo="predVisitante" value="${p.predVisitante}">
           <span class="caption">${partido.visitante}</span>
         </div>
       </div>
@@ -328,6 +333,7 @@ function activarEventosInputs() {
       const id = e.target.dataset.id;
       const campo = e.target.dataset.campo;
       obtenerPronostico(id)[campo] = e.target.value;
+      e.target.closest(".partido")?.classList.toggle("partido-capturado", tieneMarcadorCapturado(id));
       if (campo === "predLocal" || campo === "predVisitante") estado.eliminatoriasGeneradas = false;
       actualizarResumen();
       renderizarEliminatorias();
@@ -636,7 +642,7 @@ function renderizarEliminatorias() {
             <span>${equipo.equipo}</span>
             <div class="cruce-marcador">
               <small>${equipo.origen}</small>
-              <input type="number" min="0" inputmode="numeric" data-llave="${cruce.partido}" data-pos="${index === 0 ? "local" : "visitante"}" value="${index === 0 ? marcador.local : marcador.visitante}" placeholder="0">
+              <input type="number" min="0" inputmode="numeric" data-llave="${cruce.partido}" data-pos="${index === 0 ? "local" : "visitante"}" value="${index === 0 ? marcador.local : marcador.visitante}">
             </div>
           </div>
         `).join("")}

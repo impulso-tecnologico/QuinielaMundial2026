@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Instrucciones Quiniela Mundial 2026</title>
+  <style>
+    :root {
+      --verde: #0f7b45;
+      --verde-oscuro: #084c2d;
+      --azul: #123c69;
+      --oro: #f2c94c;
+      --texto: #17202a;
+      --muted: #667085;
+      --borde: #d9e2df;
+      --fondo: #f4f7f6;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--texto);
+      background: var(--fondo);
+      line-height: 1.55;
+    }
+
+    .page {
+      max-width: 920px;
+      margin: 0 auto;
+      background: #ffffff;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--verde-oscuro), var(--verde), var(--azul));
+      color: #ffffff;
+      padding: 42px 48px;
+    }
+
+    header h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      line-height: 1.1;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 17px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    main {
+      padding: 34px 48px 48px;
+    }
+
+    h2 {
+      color: var(--verde-oscuro);
+      margin: 30px 0 10px;
+      font-size: 22px;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      margin: 20px 0 8px;
+      color: var(--azul);
+      font-size: 17px;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    ul,
+    ol {
+      margin: 8px 0 16px 22px;
+      padding: 0;
+    }
+
+    li {
+      margin: 6px 0;
+    }
+
+    .intro {
+      border: 1px solid var(--borde);
+      border-left: 6px solid var(--verde);
+      border-radius: 14px;
+      padding: 18px;
+      background: #f8fbfa;
+      margin-bottom: 24px;
+    }
+
+    .note {
+      background: #fff8df;
+      border: 1px solid #f2df98;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin: 14px 0;
+    }
+
+    .steps {
+      display: grid;
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .step {
+      border: 1px solid var(--borde);
+      border-radius: 14px;
+      padding: 14px 16px;
+      background: #ffffff;
+    }
+
+    .step strong {
+      color: var(--verde-oscuro);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 22px;
+      page-break-inside: avoid;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--borde);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eef4f2;
+      color: var(--verde-oscuro);
+    }
+
+    .score {
+      font-weight: 800;
+      color: var(--verde-oscuro);
+      white-space: nowrap;
+    }
+
+    .footer {
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--borde);
+      margin-top: 34px;
+      padding-top: 14px;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      .page {
+        max-width: none;
+      }
+
+      header,
+      main {
+        padding-left: 32px;
+        padding-right: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Instrucciones para llenar la Quiniela Mundial 2026</h1>
+      <p>Guía para participantes: cómo capturar tus pronósticos, generar fases finales y entender el puntaje.</p>
+    </header>
+
+    <main>
+      <section class="intro">
+        <p><strong>Bienvenido a la quiniela.</strong> El objetivo es pronosticar los marcadores del Mundial 2026, proyectar qué equipos avanzan a las fases finales y competir en el ranking general.</p>
+        <p>Esta guía explica el proceso paso a paso con ejemplos sencillos. No necesitas conocer reglas técnicas del sistema para participar.</p>
+      </section>
+
+      <h2>1. Antes de empezar</h2>
+      <p>Ten a la mano el nombre con el que quieres participar. Ese nombre será usado para guardar tus pronósticos y mostrar tus puntos en el ranking.</p>
+      <div class="note">
+        <strong>Importante:</strong> tus cambios se guardan únicamente cuando presionas el botón <strong>Guardar predicciones</strong>.
+      </div>
+
+      <h2>2. Cómo llenar la fase de grupos</h2>
+      <div class="steps">
+        <div class="step"><strong>Paso 1:</strong> escribe tu nombre en el campo <strong>Participante</strong>.</div>
+        <div class="step"><strong>Paso 2:</strong> captura el marcador que crees que tendrá cada partido de fase de grupos.</div>
+        <div class="step"><strong>Paso 3:</strong> puedes usar marcadores con cero, por ejemplo <strong>0-0</strong>, <strong>1-0</strong> o <strong>0-2</strong>.</div>
+        <div class="step"><strong>Paso 4:</strong> cuando termines todos los partidos de grupos, presiona <strong>Generar fases finales</strong>.</div>
+      </div>
+
+      <p>La fase de grupos se usa para calcular qué equipos avanzan a la eliminación directa según tus propios pronósticos.</p>
+
+      <h2>3. Cómo se generan las fases finales</h2>
+      <p>Después de llenar todos los partidos de grupos, el sistema calcula la clasificación de cada grupo y genera la llave de eliminación directa.</p>
+      <p>Clasifican a la siguiente fase:</p>
+      <ul>
+        <li>Los 12 primeros lugares de grupo.</li>
+        <li>Los 12 segundos lugares de grupo.</li>
+        <li>Los 8 mejores terceros lugares.</li>
+      </ul>
+      <p>El sistema ordena los equipos usando criterios como puntos, diferencia de goles y goles a favor.</p>
+
+      <h2>4. Cómo llenar la eliminación directa</h2>
+      <p>Una vez generadas las fases finales, captura el marcador de cada cruce visible.</p>
+      <ul>
+        <li>Para que un equipo avance, el marcador no debe quedar empatado.</li>
+        <li>Cuando completes una ronda, se habilitará la siguiente.</li>
+        <li>Puedes llenar hasta la final y el partido por tercer lugar.</li>
+      </ul>
+
+      <div class="note">
+        Si cambias marcadores de fase de grupos después de generar la llave, vuelve a presionar <strong>Generar fases finales</strong> para actualizarla.
+      </div>
+
+      <h2>5. Premios individuales</h2>
+      <p>Al final también puedes pronosticar los ganadores de premios individuales:</p>
+      <ul>
+        <li><strong>Balón de oro:</strong> mejor jugador del torneo.</li>
+        <li><strong>Bota de oro:</strong> máximo goleador del torneo.</li>
+        <li><strong>Guante de oro:</strong> mejor portero del torneo.</li>
+      </ul>
+
+      <h2>6. Qué se guarda al presionar Guardar predicciones</h2>
+      <p>Cuando presionas <strong>Guardar predicciones</strong>, se guarda lo siguiente:</p>
+      <ul>
+        <li>Tus marcadores de fase de grupos.</li>
+        <li>Los cruces de fases finales que generaste.</li>
+        <li>Los marcadores de eliminación directa que capturaste.</li>
+        <li>Tus pronósticos de premios individuales.</li>
+      </ul>
+
+      <h2>7. Puntuación de fase de grupos</h2>
+      <p>Cada partido de fase de grupos puede dar hasta <strong>2 puntos</strong>.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Acierto</th>
+            <th>Explicación</th>
+            <th>Puntos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Resultado correcto</td>
+            <td>Acertar si gana el local, gana el visitante o empatan.</td>
+            <td class="score">1 punto</td>
+          </tr>
+          <tr>
+            <td>Marcador exacto</td>
+            <td>Acertar los goles exactos de ambos equipos.</td>
+            <td class="score">1 punto adicional</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Ejemplos de fase de grupos</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Marcador real</th>
+            <th>Tu pronóstico</th>
+            <th>Resultado</th>
+            <th>Puntos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>México 2-1 Canadá</td>
+            <td>México 2-1 Canadá</td>
+            <td>Acertaste ganador y marcador exacto.</td>
+            <td class="score">2</td>
+          </tr>
+          <tr>
+            <td>México 2-1 Canadá</td>
+            <td>México 1-0 Canadá</td>
+            <td>Acertaste ganador, pero no marcador exacto.</td>
+            <td class="score">1</td>
+          </tr>
+          <tr>
+            <td>México 2-1 Canadá</td>
+            <td>México 1-1 Canadá</td>
+            <td>No acertaste el resultado.</td>
+            <td class="score">0</td>
+          </tr>
+          <tr>
+            <td>México 0-0 Canadá</td>
+            <td>México 0-0 Canadá</td>
+            <td>Acertaste empate y marcador exacto.</td>
+            <td class="score">2</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>8. Puntuación de eliminación directa</h2>
+      <p>Cada partido de eliminación directa puede dar hasta <strong>3 puntos</strong>.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Acierto</th>
+            <th>Explicación</th>
+            <th>Puntos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cruce exacto</td>
+            <td>Acertar los dos equipos que jugaron ese partido de la llave.</td>
+            <td class="score">1 punto</td>
+          </tr>
+          <tr>
+            <td>Equipo que avanza</td>
+            <td>Acertar qué equipo pasa a la siguiente ronda.</td>
+            <td class="score">1 punto</td>
+          </tr>
+          <tr>
+            <td>Marcador exacto</td>
+            <td>Acertar el marcador exacto del partido.</td>
+            <td class="score">1 punto</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <strong>Regla clave:</strong> el punto por equipo que avanza y el punto por marcador exacto solo cuentan si también acertaste el cruce exacto.
+      </div>
+
+      <h2>9. Qué significa cruce exacto</h2>
+      <p>Un cruce exacto significa que acertaste los dos equipos que jugaron en una posición específica de la llave. El orden no importa.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cruce real</th>
+            <th>Tu cruce</th>
+            <th>¿Cuenta como exacto?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>México vs Colombia</td>
+            <td>México vs Colombia</td>
+            <td>Sí</td>
+          </tr>
+          <tr>
+            <td>México vs Colombia</td>
+            <td>Colombia vs México</td>
+            <td>Sí</td>
+          </tr>
+          <tr>
+            <td>México vs Colombia</td>
+            <td>México vs Uruguay</td>
+            <td>No</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Ejemplos de eliminación directa</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Marcador real</th>
+            <th>Tu pronóstico</th>
+            <th>Explicación</th>
+            <th>Puntos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>México 2-1 Colombia</td>
+            <td>México 2-1 Colombia</td>
+            <td>Cruce exacto, ganador correcto y marcador exacto.</td>
+            <td class="score">3</td>
+          </tr>
+          <tr>
+            <td>México 2-1 Colombia</td>
+            <td>México 1-0 Colombia</td>
+            <td>Cruce exacto y ganador correcto, pero marcador diferente.</td>
+            <td class="score">2</td>
+          </tr>
+          <tr>
+            <td>México 2-1 Colombia</td>
+            <td>Colombia 1-2 México</td>
+            <td>El orden está invertido, pero los equipos y marcador por equipo son correctos.</td>
+            <td class="score">3</td>
+          </tr>
+          <tr>
+            <td>México 2-1 Colombia</td>
+            <td>México 2-1 Uruguay</td>
+            <td>No acertaste el cruce exacto.</td>
+            <td class="score">0</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>10. Ranking</h2>
+      <p>El ranking suma los puntos obtenidos por cada participante. Mientras más aciertos tengas en marcadores, cruces y equipos que avanzan, más alto aparecerás en la tabla.</p>
+
+      <h2>11. Recomendaciones finales</h2>
+      <ul>
+        <li>Llena todos los partidos de fase de grupos antes de generar fases finales.</li>
+        <li>Revisa bien tu llave antes de guardar.</li>
+        <li>Presiona <strong>Guardar predicciones</strong> después de cualquier cambio importante.</li>
+        <li>Si cambias tus marcadores de grupos, vuelve a generar las fases finales.</li>
+        <li>No olvides capturar los premios individuales.</li>
+      </ul>
+
+      <p class="footer">Documento de apoyo para participantes de la Quiniela Mundial 2026.</p>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Instrucciones - Quiniela Mundial 2026</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-content">
+      <h1>Instrucciones de la quiniela</h1>
+      <p style="font-weight: bold;">Guía para llenar tus pronósticos, generar fases finales y entender el puntaje</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel instrucciones-content" style="margin-top:10px">
+      <div class="acciones" style="margin-top: 0;">
+        <button class="btn-secondary" onclick="window.location.href='index.html'">Volver a la quiniela</button>
+        <button class="btn-secondary" onclick="window.print()">Imprimir</button>
+      </div>
+
+      <div class="section-title">
+        <h2>Antes de empezar</h2>
+      </div>
+      <div class="placeholder instrucciones-destacado">
+        Ingresa tu nombre como participante. Tus predicciones se guardan con ese nombre y aparecerán en el ranking cuando haya resultados para evaluar.
+      </div>
+      <p><strong>Importante:</strong> tus cambios se guardan únicamente cuando presionas <strong>Guardar predicciones</strong>.</p>
+
+      <div class="section-title">
+        <h2>Cómo llenar la fase de grupos</h2>
+      </div>
+      <div class="instrucciones-grid">
+        <article class="stat">
+          <span>Paso 1</span>
+          <strong>Participante</strong>
+          <p>Escribe tu nombre en el campo Participante.</p>
+        </article>
+        <article class="stat">
+          <span>Paso 2</span>
+          <strong>Marcadores</strong>
+          <p>Captura el marcador que crees que tendrá cada partido.</p>
+        </article>
+        <article class="stat">
+          <span>Paso 3</span>
+          <strong>Fases finales</strong>
+          <p>Cuando termines los grupos, presiona Generar fases finales.</p>
+        </article>
+      </div>
+      <p>Los marcadores con cero son válidos. Por ejemplo: <strong>0-0</strong>, <strong>1-0</strong> o <strong>0-2</strong>.</p>
+
+      <div class="section-title">
+        <h2>Cómo se generan las fases finales</h2>
+      </div>
+      <p>El sistema usa tus marcadores de fase de grupos para calcular qué equipos avanzan a eliminación directa.</p>
+      <ul>
+        <li>Clasifican los 12 primeros lugares de grupo.</li>
+        <li>Clasifican los 12 segundos lugares de grupo.</li>
+        <li>Clasifican los 8 mejores terceros lugares.</li>
+      </ul>
+      <p>La tabla se ordena usando puntos, diferencia de goles, goles a favor y criterios de desempate del sistema.</p>
+
+      <div class="section-title">
+        <h2>Eliminación directa</h2>
+      </div>
+      <p>Una vez generada la llave, captura los marcadores de cada cruce visible.</p>
+      <ul>
+        <li>Para que un equipo avance, el marcador no debe quedar empatado.</li>
+        <li>Cuando completas una ronda, se habilita la siguiente.</li>
+        <li>Se pueden guardar cruces desde dieciseisavos hasta la final.</li>
+      </ul>
+      <div class="placeholder instrucciones-destacado">
+        Si cambias marcadores de fase de grupos, vuelve a presionar Generar fases finales para actualizar la llave.
+      </div>
+
+      <div class="section-title">
+        <h2>Premios individuales</h2>
+      </div>
+      <p>También puedes pronosticar:</p>
+      <ul>
+        <li><strong>Balón de oro:</strong> mejor jugador del torneo.</li>
+        <li><strong>Bota de oro:</strong> máximo goleador del torneo.</li>
+        <li><strong>Guante de oro:</strong> mejor portero del torneo.</li>
+      </ul>
+
+      <div class="section-title">
+        <h2>Qué guarda el sistema</h2>
+      </div>
+      <p>Al presionar <strong>Guardar predicciones</strong>, se guardan:</p>
+      <ul>
+        <li>Marcadores de fase de grupos.</li>
+        <li>Cruces generados de fases finales.</li>
+        <li>Marcadores de eliminación directa.</li>
+        <li>Premios individuales.</li>
+      </ul>
+
+      <div class="section-title">
+        <h2>Puntaje de fase de grupos</h2>
+      </div>
+      <p>Cada partido de fase de grupos puede dar hasta <strong>2 puntos</strong>.</p>
+      <div class="ranking-table-wrap instrucciones-tabla">
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th>Acierto</th>
+              <th>Explicación</th>
+              <th>Puntos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Resultado correcto</td>
+              <td>Acertar si gana el local, gana el visitante o empatan.</td>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td>Marcador exacto</td>
+              <td>Acertar los goles exactos de ambos equipos.</td>
+              <td>1 adicional</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Ejemplos de fase de grupos</h3>
+      <div class="ranking-table-wrap instrucciones-tabla">
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th>Marcador real</th>
+              <th>Pronóstico</th>
+              <th>Explicación</th>
+              <th>Puntos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>México 2-1 Canadá</td>
+              <td>México 2-1 Canadá</td>
+              <td>Ganador y marcador exacto.</td>
+              <td>2</td>
+            </tr>
+            <tr>
+              <td>México 2-1 Canadá</td>
+              <td>México 1-0 Canadá</td>
+              <td>Ganador correcto, marcador diferente.</td>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td>México 0-0 Canadá</td>
+              <td>México 0-0 Canadá</td>
+              <td>Empate y marcador exacto.</td>
+              <td>2</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-title">
+        <h2>Puntaje de eliminación directa</h2>
+      </div>
+      <p>Cada partido de eliminación directa puede dar hasta <strong>3 puntos</strong>.</p>
+      <div class="ranking-table-wrap instrucciones-tabla">
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th>Acierto</th>
+              <th>Explicación</th>
+              <th>Puntos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Cruce exacto</td>
+              <td>Acertar los dos equipos que jugaron ese partido de la llave.</td>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td>Equipo que avanza</td>
+              <td>Acertar quién pasa a la siguiente ronda.</td>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td>Marcador exacto</td>
+              <td>Acertar el marcador exacto del partido.</td>
+              <td>1</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="placeholder instrucciones-destacado">
+        Regla clave: el punto por equipo que avanza y el punto por marcador exacto solo cuentan si también acertaste el cruce exacto.
+      </div>
+
+      <div class="section-title">
+        <h2>Qué significa cruce exacto</h2>
+      </div>
+      <p>Un cruce exacto significa que acertaste los dos equipos que jugaron en una posición específica de la llave. El orden no importa.</p>
+      <div class="ranking-table-wrap instrucciones-tabla">
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th>Cruce real</th>
+              <th>Tu cruce</th>
+              <th>¿Cuenta?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>México vs Colombia</td>
+              <td>México vs Colombia</td>
+              <td>Sí</td>
+            </tr>
+            <tr>
+              <td>México vs Colombia</td>
+              <td>Colombia vs México</td>
+              <td>Sí</td>
+            </tr>
+            <tr>
+              <td>México vs Colombia</td>
+              <td>México vs Uruguay</td>
+              <td>No</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-title">
+        <h2>Recomendaciones finales</h2>
+      </div>
+      <ul>
+        <li>Llena todos los partidos de grupos antes de generar fases finales.</li>
+        <li>Revisa bien tu llave antes de guardar.</li>
+        <li>Guarda tus predicciones después de cualquier cambio importante.</li>
+        <li>No olvides capturar los premios individuales.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
