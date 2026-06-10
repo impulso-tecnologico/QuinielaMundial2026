@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Predicciones - Quiniela Mundial 2026</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-content">
+      <h1>Predicciones</h1>
+      <p style="font-weight: bold;">Consulta de pronósticos guardados por participante</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel" style="margin-top:10px">
+      <div class="acciones" style="margin-top: 0;">
+        <button class="btn-secondary" onclick="window.location.href='index.html'">Volver a la quiniela</button>
+        <button class="btn-secondary" onclick="window.location.href='ranking.html'">Ver resultados</button>
+        <button class="btn-primary" id="btnActualizarPredicciones">Actualizar</button>
+      </div>
+
+      <div class="toolbar" style="margin-top: 16px;">
+        <div>
+          <label for="participanteFiltro">Ver participante</label>
+          <select id="participanteFiltro">
+            <option value="TODOS">Todos los participantes</option>
+          </select>
+        </div>
+        <div>
+          <label>Estado</label>
+          <div class="guardar-estado" id="prediccionesEstado" aria-live="polite" style="text-align: left; margin-top: 0;">Cargando predicciones...</div>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <h2>Pronósticos guardados</h2>
+        <small id="contadorPredicciones"></small>
+      </div>
+
+      <section class="ranking-dashboard" id="prediccionesListado"></section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© 2026 Impulso Tecnológico. Todos los derechos reservados.</p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="predicciones.js"></script>
+</body>
+</html>

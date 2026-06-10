@@ -23,7 +23,7 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            cors.WithOrigins("https://localhost:7224")
+            cors.WithOrigins("https://localhost:5037")
                .AllowAnyHeader()
                .AllowAnyMethod()
                .WithExposedHeaders("X-Mensaje");

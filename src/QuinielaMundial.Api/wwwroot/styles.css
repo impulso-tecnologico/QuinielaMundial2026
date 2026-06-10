@@ -638,6 +638,24 @@ button:hover {
   padding: 18px;
 }
 
+.predicciones-participante {
+  display: grid;
+  gap: 16px;
+}
+
+.predicciones-resumen {
+  margin-top: 0;
+}
+
+.predicciones-participante .ranking-table-wrap {
+  margin-top: -4px;
+}
+
+.predicciones-participante small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
 @media (max-width: 900px) {
       .toolbar,
       .resumen,
