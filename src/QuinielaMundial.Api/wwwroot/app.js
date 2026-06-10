@@ -786,11 +786,105 @@ function sincronizarPremiosDesdeInputs() {
   };
 }
 
+function enfocarCampoValidacion(selector) {
+  if (!selector) return;
+
+  const elemento = document.querySelector(selector);
+  if (!elemento) return;
+
+  elemento.scrollIntoView({ behavior: "smooth", block: "center" });
+  if (typeof elemento.focus === "function") elemento.focus();
+}
+
+function validarPrediccionesCompletas() {
+  for (const partido of partidos.filter(partido => partido.grupo)) {
+    const pronostico = obtenerPronostico(partido.id);
+    if (valorNumero(pronostico.predLocal) === null) {
+      return {
+        mensaje: `Falta capturar marcador de ${partido.local} en el Partido ${partido.numero}.`,
+        selector: `[data-id="${partido.id}"][data-campo="predLocal"]`
+      };
+    }
+
+    if (valorNumero(pronostico.predVisitante) === null) {
+      return {
+        mensaje: `Falta capturar marcador de ${partido.visitante} en el Partido ${partido.numero}.`,
+        selector: `[data-id="${partido.id}"][data-campo="predVisitante"]`
+      };
+    }
+  }
+
+  if (!estado.eliminatoriasGeneradas) {
+    return {
+      mensaje: "Genera las fases finales antes de guardar predicciones.",
+      selector: "#btnGenerarFasesFinales"
+    };
+  }
+
+  const crucesEliminatoria = obtenerCrucesEliminatoriasGenerados();
+  if (crucesEliminatoria.length < 32) {
+    return {
+      mensaje: `Completa todos los marcadores de fases finales hasta Final y Tercer lugar antes de guardar. Cruces generados: ${crucesEliminatoria.length} de 32.`,
+      selector: "#eliminatorias"
+    };
+  }
+
+  for (const cruce of crucesEliminatoria) {
+    const marcador = estado.eliminatorias?.[cruce.bracketMatchNumber] || {};
+    const local = valorNumero(marcador.local);
+    const visitante = valorNumero(marcador.visitante);
+
+    if (local === null) {
+      return {
+        mensaje: `Falta capturar marcador local del Partido ${cruce.bracketMatchNumber} de ${cruce.roundName}.`,
+        selector: `[data-llave="${cruce.bracketMatchNumber}"][data-pos="local"]`
+      };
+    }
+
+    if (visitante === null) {
+      return {
+        mensaje: `Falta capturar marcador visitante del Partido ${cruce.bracketMatchNumber} de ${cruce.roundName}.`,
+        selector: `[data-llave="${cruce.bracketMatchNumber}"][data-pos="visitante"]`
+      };
+    }
+
+    if (local === visitante) {
+      return {
+        mensaje: `El Partido ${cruce.bracketMatchNumber} de ${cruce.roundName} no puede quedar empatado en fases finales.`,
+        selector: `[data-llave="${cruce.bracketMatchNumber}"][data-pos="local"]`
+      };
+    }
+  }
+
+  if (!estado.premios.balonOro) {
+    return { mensaje: "Captura el Balón de oro antes de guardar.", selector: "#balonOro" };
+  }
+
+  if (!estado.premios.botaOro) {
+    return { mensaje: "Captura la Bota de oro antes de guardar.", selector: "#botaOro" };
+  }
+
+  if (!estado.premios.guanteOro) {
+    return { mensaje: "Captura el Guante de oro antes de guardar.", selector: "#guanteOro" };
+  }
+
+  return null;
+}
+
 async function guardarPredicciones() {
   try {
     mostrarEstadoGuardado("Guardando predicciones...");
     const boton = $("#btnGuardarPredicciones");
     boton.disabled = true;
+
+    sincronizarPremiosDesdeInputs();
+    const validacion = validarPrediccionesCompletas();
+    if (validacion) {
+      mostrarEstadoGuardado(validacion.mensaje, "error");
+      enfocarCampoValidacion(validacion.selector);
+      alert(validacion.mensaje);
+      return;
+    }
 
     const participantId = await asegurarParticipante(false);
     if (!participantId) return;
@@ -798,7 +892,6 @@ async function guardarPredicciones() {
     const grupos = obtenerPronosticosGrupoCompletos();
     const eliminatoriasGuardables = obtenerPronosticosEliminatoriaCompletos();
     const crucesEliminatoria = obtenerCrucesEliminatoriasGenerados();
-    sincronizarPremiosDesdeInputs();
 
     await Promise.all(grupos.map(({ partido, pronostico }) => apiJson(`/api/participants/${participantId}/predictions/${partido.id}`, {
       method: "PUT",
