@@ -213,6 +213,9 @@
       <p>Una vez generadas las fases finales, captura el marcador de cada cruce visible.</p>
       <ul>
         <li>Para que un equipo avance, el marcador no debe quedar empatado.</li>
+        <li>En fases finales no existen empates para la quiniela.</li>
+        <li>Si crees que el partido se irá a penales, captura como predicción el resultado de los penales.</li>
+        <li>Ese marcador de penales será el que se tomará para otorgar puntos.</li>
         <li>Cuando completes una ronda, se habilitará la siguiente.</li>
         <li>Puedes llenar hasta la final y el partido por tercer lugar.</li>
       </ul>
@@ -224,9 +227,9 @@
       <h2>5. Premios individuales</h2>
       <p>Al final también puedes pronosticar los ganadores de premios individuales:</p>
       <ul>
-        <li><strong>Balón de oro:</strong> mejor jugador del torneo.</li>
-        <li><strong>Bota de oro:</strong> máximo goleador del torneo.</li>
-        <li><strong>Guante de oro:</strong> mejor portero del torneo.</li>
+        <li><strong>Balón de oro:</strong> mejor jugador del torneo. Vale 5 puntos si se acierta.</li>
+        <li><strong>Bota de oro:</strong> goleador del torneo. Vale 5 puntos si se acierta.</li>
+        <li><strong>Guante de oro:</strong> mejor portero del torneo. Vale 5 puntos si se acierta.</li>
       </ul>
 
       <h2>6. Qué se guarda al presionar Guardar predicciones</h2>
@@ -330,10 +333,38 @@
       </table>
 
       <div class="note">
-        <strong>Regla clave:</strong> el punto por equipo que avanza y el punto por marcador exacto solo cuentan si también acertaste el cruce exacto.
+        <strong>Regla clave:</strong> el punto por equipo que avanza y el punto por marcador exacto solo cuentan si también acertaste el cruce exacto. En fases finales no hay empates; si pronosticas que se definirá en penales, escribe el marcador de penales.
       </div>
 
-      <h2>9. Qué significa cruce exacto</h2>
+      <h2>9. Puntuación de premios individuales</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Premio</th>
+            <th>Descripción</th>
+            <th>Puntos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Balón de oro</td>
+            <td>Mejor jugador del torneo.</td>
+            <td class="score">5 puntos</td>
+          </tr>
+          <tr>
+            <td>Bota de oro</td>
+            <td>Goleador del torneo.</td>
+            <td class="score">5 puntos</td>
+          </tr>
+          <tr>
+            <td>Guante de oro</td>
+            <td>Mejor portero del torneo.</td>
+            <td class="score">5 puntos</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>10. Qué significa cruce exacto</h2>
       <p>Un cruce exacto significa que acertaste los dos equipos que jugaron en una posición específica de la llave. El orden no importa.</p>
       <table>
         <thead>
@@ -400,10 +431,10 @@
         </tbody>
       </table>
 
-      <h2>10. Ranking</h2>
+      <h2>11. Ranking</h2>
       <p>El ranking suma los puntos obtenidos por cada participante. Mientras más aciertos tengas en marcadores, cruces y equipos que avanzan, más alto aparecerás en la tabla.</p>
 
-      <h2>11. Recomendaciones finales</h2>
+      <h2>12. Recomendaciones finales</h2>
       <ul>
         <li>Llena todos los partidos de fase de grupos antes de generar fases finales.</li>
         <li>Revisa bien tu llave antes de guardar.</li>

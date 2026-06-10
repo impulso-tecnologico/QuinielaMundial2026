@@ -5,6 +5,7 @@ const participanteFiltro = $("#participanteFiltro");
 const prediccionesListado = $("#prediccionesListado");
 const prediccionesEstado = $("#prediccionesEstado");
 const contadorPredicciones = $("#contadorPredicciones");
+const tituloOriginal = document.title;
 
 let matches = [];
 let participantesDetalle = [];
@@ -127,7 +128,7 @@ function renderizarParticipante(detalle) {
   const premiosCapturados = contarPremios(detalle.awards);
 
   return `
-    <article class="podium-card predicciones-participante">
+    <article class="podium-card predicciones-participante" data-participant-id="${detalle.participant.id}">
       <div class="section-title" style="margin-top: 0;">
         <h2>${escapeHtml(detalle.participant.name)}</h2>
         <small>${groupPredictions.length} grupos · ${knockoutRows.length} cruces</small>
@@ -157,6 +158,24 @@ function renderizarParticipante(detalle) {
       ${renderizarPremios(detalle.awards)}
     </article>
   `;
+}
+
+function imprimirParticipanteSeleccionado() {
+  if (participanteFiltro.value === "TODOS") {
+    prediccionesEstado.textContent = "Selecciona un participante para imprimir sus predicciones.";
+    participanteFiltro.focus();
+    alert("Selecciona un participante para imprimir sus predicciones.");
+    return;
+  }
+
+  const detalle = participantesDetalle.find(item => String(item.participant.id) === participanteFiltro.value);
+  if (!detalle) {
+    prediccionesEstado.textContent = "No se encontró el participante seleccionado.";
+    return;
+  }
+
+  document.title = `Predicciones - ${detalle.participant.name}`;
+  window.print();
 }
 
 function renderizarTablaGrupos(groupPredictions) {
@@ -266,4 +285,8 @@ function renderizarPremios(awards) {
 
 participanteFiltro.addEventListener("change", renderizarPredicciones);
 $("#btnActualizarPredicciones").addEventListener("click", cargarPredicciones);
+$("#btnImprimirParticipante").addEventListener("click", imprimirParticipanteSeleccionado);
+window.addEventListener("afterprint", () => {
+  document.title = tituloOriginal;
+});
 cargarPredicciones();

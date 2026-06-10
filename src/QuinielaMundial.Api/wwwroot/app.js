@@ -125,6 +125,10 @@ function mostrarEstadoGuardado(mensaje, tipo = "") {
   guardarEstado.className = `guardar-estado ${tipo}`.trim();
 }
 
+function nombreParticipanteCapturado() {
+  return participante.value.trim() !== "";
+}
+
 async function asegurarParticipante(cargarDatos = true) {
   const nombre = participante.value.trim();
   if (!nombre) {
@@ -271,6 +275,7 @@ function tieneMarcadorCapturado(id) {
 function renderizarPartidos() {
   const grupo = grupoFiltro.value;
   const texto = normalizarTexto(buscar.value.trim());
+  const inputsDeshabilitados = nombreParticipanteCapturado() ? "" : "disabled";
 
   const filtrados = partidos.filter(p => {
     const coincideGrupo = grupo === "TODOS" || p.grupo === grupo;
@@ -304,9 +309,9 @@ function renderizarPartidos() {
         <div class="caption">Tu pronóstico</div>
         <div class="pronostico">
           <span class="caption">${partido.local}</span>
-          <input type="number" min="0" inputmode="numeric" data-id="${partido.id}" data-campo="predLocal" value="${p.predLocal}">
+          <input type="number" min="0" inputmode="numeric" data-id="${partido.id}" data-campo="predLocal" value="${p.predLocal}" ${inputsDeshabilitados}>
           <span class="separador">-</span>
-          <input type="number" min="0" inputmode="numeric" data-id="${partido.id}" data-campo="predVisitante" value="${p.predVisitante}">
+          <input type="number" min="0" inputmode="numeric" data-id="${partido.id}" data-campo="predVisitante" value="${p.predVisitante}" ${inputsDeshabilitados}>
           <span class="caption">${partido.visitante}</span>
         </div>
       </div>
@@ -328,6 +333,13 @@ function renderizarPartidos() {
 function activarEventosInputs() {
   document.querySelectorAll("[data-id][data-campo]").forEach(input => {
     input.addEventListener("input", (e) => {
+      if (!nombreParticipanteCapturado()) {
+        e.target.value = "";
+        mostrarEstadoGuardado("Captura el nombre del participante antes de llenar marcadores.", "error");
+        participante.focus();
+        return;
+      }
+
       if (e.target.value !== "" && Number(e.target.value) < 0) e.target.value = 0;
 
       const id = e.target.dataset.id;
@@ -661,6 +673,7 @@ function renderizarEliminatorias() {
   const { partidosConPronostico } = clasificados;
   const estadoTexto = $("#estadoEliminatorias");
   const totalGrupos = partidos.filter(partido => partido.grupo).length;
+  const inputsDeshabilitados = nombreParticipanteCapturado() ? "" : "disabled";
 
   if (!estado.eliminatoriasGeneradas) {
     estadoTexto.textContent = `${partidosConPronostico} de ${totalGrupos} pronósticos capturados`;
@@ -704,7 +717,7 @@ function renderizarEliminatorias() {
             <span>${equipo.equipo}</span>
             <div class="cruce-marcador">
               <small>${equipo.origen}</small>
-              <input type="number" min="0" inputmode="numeric" data-llave="${cruce.partido}" data-pos="${index === 0 ? "local" : "visitante"}" value="${index === 0 ? marcador.local : marcador.visitante}">
+              <input type="number" min="0" inputmode="numeric" data-llave="${cruce.partido}" data-pos="${index === 0 ? "local" : "visitante"}" value="${index === 0 ? marcador.local : marcador.visitante}" ${inputsDeshabilitados}>
             </div>
           </div>
         `).join("")}
@@ -721,6 +734,13 @@ function renderizarEliminatorias() {
 function activarEventosEliminatorias() {
   document.querySelectorAll("[data-llave][data-pos]").forEach(input => {
     input.addEventListener("input", (e) => {
+      if (!nombreParticipanteCapturado()) {
+        e.target.value = "";
+        mostrarEstadoGuardado("Captura el nombre del participante antes de llenar marcadores.", "error");
+        participante.focus();
+        return;
+      }
+
       if (e.target.value !== "" && Number(e.target.value) < 0) e.target.value = 0;
 
       const llave = e.target.dataset.llave;
@@ -736,6 +756,12 @@ function activarEventosEliminatorias() {
 }
 
 function generarFasesFinales() {
+  if (!nombreParticipanteCapturado()) {
+    mostrarEstadoGuardado("Captura el nombre del participante antes de generar fases finales.", "error");
+    participante.focus();
+    return;
+  }
+
   const { partidosConPronostico } = obtenerClasificados();
   const totalGrupos = partidos.filter(partido => partido.grupo).length;
 
@@ -797,6 +823,10 @@ function enfocarCampoValidacion(selector) {
 }
 
 function validarPrediccionesCompletas() {
+  if (!nombreParticipanteCapturado()) {
+    return { mensaje: "Captura el nombre del participante antes de guardar.", selector: "#participante" };
+  }
+
   for (const partido of partidos.filter(partido => partido.grupo)) {
     const pronostico = obtenerPronostico(partido.id);
     if (valorNumero(pronostico.predLocal) === null) {
@@ -938,6 +968,7 @@ participante.addEventListener("input", () => {
   estado.eliminatoriasGeneradas = false;
   estado.premios = { balonOro: "", botaOro: "", guanteOro: "" };
   actualizarInputsPremios();
+  renderizarPartidos();
 });
 participante.addEventListener("change", async () => {
   try {

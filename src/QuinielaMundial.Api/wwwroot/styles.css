@@ -407,6 +407,14 @@ button:hover {
   padding: 10px 6px;
 }
 
+.pronostico input:disabled,
+.cruce-marcador input:disabled {
+  background: #eef4f2;
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
 .separador {
   text-align: center;
   color: var(--muted);
@@ -695,9 +703,15 @@ button:hover {
 }
 
 @media print {
+  @page {
+    size: letter;
+    margin: 10mm;
+  }
+
   .toolbar,
   .acciones,
-  .footer-note {
+  .footer-note,
+  .footer {
     display: none;
   }
 
@@ -712,5 +726,111 @@ button:hover {
 
   .partido {
     break-inside: avoid;
+  }
+
+  .pagina-predicciones {
+    background: #ffffff;
+  }
+
+  .pagina-predicciones .hero {
+    background: #ffffff !important;
+    color: var(--texto);
+    padding: 0 0 12px;
+  }
+
+  .pagina-predicciones .hero::before,
+  .pagina-predicciones .hero::after {
+    display: none;
+  }
+
+  .pagina-predicciones .hero-content {
+    max-width: none;
+  }
+
+  .pagina-predicciones .hero h1 {
+    color: var(--verde-oscuro);
+    font-size: 24px;
+  }
+
+  .pagina-predicciones .hero p {
+    color: var(--muted);
+  }
+
+  .pagina-predicciones .container {
+    max-width: none;
+    padding: 0;
+  }
+
+  .pagina-predicciones .panel {
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    background: #ffffff;
+  }
+
+  .pagina-predicciones .section-title {
+    margin: 14px 0 8px;
+  }
+
+  .pagina-predicciones .section-title h2 {
+    font-size: 16px;
+  }
+
+  .pagina-predicciones .ranking-dashboard {
+    gap: 10px;
+  }
+
+  .pagina-predicciones .predicciones-participante {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    gap: 10px;
+    break-inside: auto;
+  }
+
+  .pagina-predicciones .predicciones-resumen {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .pagina-predicciones .stat {
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: none;
+  }
+
+  .pagina-predicciones .stat strong {
+    font-size: 18px;
+  }
+
+  .pagina-predicciones .ranking-table-wrap {
+    overflow: visible;
+    border-radius: 0;
+    break-inside: avoid;
+  }
+
+  .pagina-predicciones .ranking-table {
+    min-width: 0;
+    font-size: 10px;
+  }
+
+  .pagina-predicciones .ranking-table th,
+  .pagina-predicciones .ranking-table td {
+    padding: 5px 6px;
+    border-bottom: 1px solid #d9e2df;
+  }
+
+  .pagina-predicciones .premios-grid {
+    grid-template-columns: repeat(3, 1fr);
+    border-radius: 8px;
+    padding: 8px;
+    gap: 8px;
+    break-inside: avoid;
+  }
+
+  .pagina-predicciones .placeholder {
+    padding: 8px;
+    border-radius: 8px;
   }
 }
