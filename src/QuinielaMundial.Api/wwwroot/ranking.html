@@ -7,47 +7,49 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="hero">
-    <div class="hero-content">
-      <h1>Resultados</h1>
-      <p>Ranking de participantes · Puntos por pronósticos evaluados</p>
-    </div>
-  </header>
-
-  <main class="container">
-    <section class="panel">
-      <div class="acciones" style="margin-top: 0;">
-        <button class="btn-secondary" onclick="window.location.href='index.html'">Volver a la quiniela</button>
-        <button class="btn-primary" id="btnActualizarRanking">Actualizar ranking</button>
-      </div>
-
-      <div class="section-title">
-        <h2>Dashboard de ranking</h2>
-        <small id="rankingEstado">Cargando ranking...</small>
-      </div>
-
-      <section class="ranking-dashboard">
-        <div class="podium" id="rankingPodium"></div>
-        <div class="ranking-table-wrap">
-          <table class="ranking-table">
-            <thead>
-              <tr>
-                <th>Posición</th>
-                <th>Participante</th>
-                <th>Puntos</th>
-                <th>Exactos</th>
-                <th>Ganador/empate</th>
-                <th>Evaluados</th>
-              </tr>
-            </thead>
-            <tbody id="rankingTabla"></tbody>
-          </table>
+    <header class="hero">
+        <div class="hero-content">
+            <h1>Resultados</h1>
+            <p>Ranking de participantes · Puntos por pronósticos evaluados</p>
         </div>
-      </section>
-    </section>
-  </main>
+    </header>
 
-  <script src="config.js"></script>
-  <script src="ranking.js"></script>
+    <main class="container">
+        <section class="panel">
+            <div class="acciones" style="margin-top: 0;">
+                <button class="btn-secondary" onclick="window.location.href='index.html'">Volver a la quiniela</button>
+                <button class="btn-primary" id="btnActualizarRanking">Actualizar ranking</button>
+            </div>
+
+            <div class="section-title">
+                <h2>Dashboard de ranking</h2>
+                <small id="rankingEstado">Cargando ranking...</small>
+            </div>
+
+            <section class="ranking-dashboard">
+                <div class="podium" id="rankingPodium"></div>
+                <div class="ranking-table-wrap">
+                    <table class="ranking-table">
+                        <thead>
+                            <tr>
+                                <th>Posición</th>
+                                <th>Participante</th>
+                                <th>Puntos</th>
+                                <th>Exactos</th>
+                                <th>Ganador/empate</th>
+                                <th>Evaluados</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rankingTabla"></tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
+    </main>
+    <footer class="footer">
+        <p>© 2026 Impulso Tecnológico. Todos los derechos reservados.</p>
+    </footer>
+    <script src="config.js"></script>
+    <script src="ranking.js"></script>
 </body>
 </html>

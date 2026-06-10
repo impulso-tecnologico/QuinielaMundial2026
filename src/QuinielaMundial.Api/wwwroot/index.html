@@ -7,102 +7,104 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="hero">
-    <div class="hero-content">
-      <h1>Quiniela Mundial 2026</h1>
-      <p>Fase de grupos · 72 partidos · Pronósticos por marcador</p>
-    </div>
-  </header>
-
-  <main class="container">
-    <section class="panel">
-      <div class="toolbar">
-        <div>
-          <label for="participante">Participante</label>
-          <input id="participante" type="text" placeholder="Nombre del participante" />
+    <header class="hero">
+        <div class="hero-content">
+            <h1>Quiniela Mundial 2026</h1>
+            <p style="font-weight: bold;">Fase de grupos · 72 partidos · Pronósticos por marcador</p>
         </div>
+    </header>
 
-        <div>
-          <label for="grupoFiltro">Filtrar por grupo</label>
-          <select id="grupoFiltro">
-            <option value="TODOS">Todos los grupos</option>
-          </select>
-        </div>
+    <main class="container">
+        <section class="panel" style="margin-top:10px">
+            <div class="toolbar">
+                <div>
+                    <label for="participante">Participante</label>
+                    <input id="participante" type="text" placeholder="Nombre del participante" />
+                </div>
 
-        <div>
-          <label for="buscar">Buscar equipo, ciudad o estadio</label>
-          <input id="buscar" type="search" placeholder="Ejemplo: México, Guadalajara, Argentina..." />
-        </div>
-      </div>
+                <div>
+                    <label for="grupoFiltro">Filtrar por grupo</label>
+                    <select id="grupoFiltro">
+                        <option value="TODOS">Todos los grupos</option>
+                    </select>
+                </div>
 
-      <div class="acciones" style="margin-top: 14px;">
-        <button class="btn-primary" id="btnGuardarPredicciones">Guardar predicciones</button>
-        <button class="btn-secondary" onclick="window.location.href='ranking.html'">Ver resultados</button>
-        <button class="btn-secondary" onclick="window.print()">Imprimir</button>
-        <button class="btn-danger" id="btnLimpiar">Limpiar</button>
-      </div>
-      <div class="guardar-estado" id="guardarEstado" aria-live="polite"></div>
+                <div>
+                    <label for="buscar">Buscar equipo, ciudad o estadio</label>
+                    <input id="buscar" type="search" placeholder="Ejemplo: México, Guadalajara, Argentina..." />
+                </div>
+            </div>
 
-      <div class="resumen hide">
-        <div class="stat">
-          <span>Partidos</span>
-          <strong id="totalPartidos">72</strong>
-        </div>
-        <div class="stat">
-          <span>Pronosticados</span>
-          <strong id="pronosticados">0</strong>
-        </div>
-        <div class="stat">
-          <span>Con resultado</span>
-          <strong id="conResultado">0</strong>
-        </div>
-        <div class="stat">
-          <span>Puntos</span>
-          <strong id="puntosTotales">0</strong>
-        </div>
-      </div>
+            <div class="acciones" style="margin-top: 14px;">
+                <button class="btn-primary" id="btnGuardarPredicciones">Guardar predicciones</button>
+                <button class="btn-secondary" onclick="window.location.href='ranking.html'">Ver resultados</button>
+                <button class="btn-secondary" onclick="window.print()">Imprimir</button>
+                <button class="btn-danger" id="btnLimpiar">Limpiar</button>
+            </div>
+            <div class="guardar-estado" id="guardarEstado" aria-live="polite"></div>
 
-      <div class="section-title">
-        <h2>Partidos de fase de grupos</h2>
-        <small id="contadorVista"></small>
-      </div>
+            <div class="resumen hide">
+                <div class="stat">
+                    <span>Partidos</span>
+                    <strong id="totalPartidos">72</strong>
+                </div>
+                <div class="stat">
+                    <span>Pronosticados</span>
+                    <strong id="pronosticados">0</strong>
+                </div>
+                <div class="stat">
+                    <span>Con resultado</span>
+                    <strong id="conResultado">0</strong>
+                </div>
+                <div class="stat">
+                    <span>Puntos</span>
+                    <strong id="puntosTotales">0</strong>
+                </div>
+            </div>
 
-      <div class="partidos" id="partidos"></div>
+            <div class="section-title">
+                <h2>Partidos de fase de grupos</h2>
+                <small id="contadorVista"></small>
+            </div>
 
-      <div class="generar-finales">
-        <button class="btn-primary" id="btnGenerarFasesFinales">Generar fases finales</button>
-      </div>
+            <div class="partidos" id="partidos"></div>
 
-      <div class="section-title">
-        <h2>Llaves de eliminación directa</h2>
-        <small id="estadoEliminatorias"></small>
-      </div>
+            <div class="generar-finales">
+                <button class="btn-primary" id="btnGenerarFasesFinales">Generar fases finales</button>
+            </div>
 
-      <div class="eliminatorias" id="eliminatorias"></div>
+            <div class="section-title">
+                <h2>Llaves de eliminación directa</h2>
+                <small id="estadoEliminatorias"></small>
+            </div>
 
-      <div class="section-title">
-        <h2>Premios individuales</h2>
-        <small>Pronóstico final</small>
-      </div>
+            <div class="eliminatorias" id="eliminatorias"></div>
 
-      <div class="premios-grid">
-        <div>
-          <label for="balonOro">Balón de oro</label>
-          <input id="balonOro" type="text" maxlength="160" placeholder="Jugador" />
-        </div>
-        <div>
-          <label for="botaOro">Bota de oro</label>
-          <input id="botaOro" type="text" maxlength="160" placeholder="Jugador" />
-        </div>
-        <div>
-          <label for="guanteOro">Guante de oro</label>
-          <input id="guanteOro" type="text" maxlength="160" placeholder="Portero" />
-        </div>
-      </div>
-    </section>
-  </main>
+            <div class="section-title">
+                <h2>Premios individuales</h2>
+                <small>Pronóstico final</small>
+            </div>
 
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+            <div class="premios-grid">
+                <div>
+                    <label for="balonOro">Balón de oro</label>
+                    <input id="balonOro" type="text" maxlength="160" placeholder="Jugador" />
+                </div>
+                <div>
+                    <label for="botaOro">Bota de oro</label>
+                    <input id="botaOro" type="text" maxlength="160" placeholder="Jugador" />
+                </div>
+                <div>
+                    <label for="guanteOro">Guante de oro</label>
+                    <input id="guanteOro" type="text" maxlength="160" placeholder="Portero" />
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer class="footer">
+        <p>© 2026 Impulso Tecnológico. Todos los derechos reservados.</p>
+    </footer>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
