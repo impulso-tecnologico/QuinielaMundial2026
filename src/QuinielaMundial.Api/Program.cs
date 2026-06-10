@@ -1,4 +1,4 @@
-using QuinielaMundial.Infrastructure;
+﻿using QuinielaMundial.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,12 +6,29 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddInfrastructure(builder.Configuration);
+// Leer los or�genes permitidos desde las variables de configuraci�n (Azure App Service)
+var allowedOrigins = builder.Configuration["Cors:AllowedOrigins"]?
+    .Split(";", StringSplitOptions.RemoveEmptyEntries);
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("CorsPolicy", policy => policy
-        .WithOrigins(builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [])
-        .AllowAnyHeader()
-        .AllowAnyMethod());
+    options.AddPolicy("CorsPolicy", cors =>
+    {
+        if (allowedOrigins != null)
+        {
+            cors.WithOrigins(allowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .WithExposedHeaders("X-Mensaje");
+        }
+        else
+        {
+            cors.WithOrigins("https://localhost:7224")
+               .AllowAnyHeader()
+               .AllowAnyMethod()
+               .WithExposedHeaders("X-Mensaje");
+        }
+    });
 });
 
 var app = builder.Build();
