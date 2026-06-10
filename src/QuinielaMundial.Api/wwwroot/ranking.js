@@ -1,4 +1,4 @@
-const API_BASE = "";
+const API_BASE = (window.QUINIELA_CONFIG?.apiBaseUrl || "").replace(/\/$/, "");
 
 const $ = (selector) => document.querySelector(selector);
 const rankingPodium = $("#rankingPodium");
