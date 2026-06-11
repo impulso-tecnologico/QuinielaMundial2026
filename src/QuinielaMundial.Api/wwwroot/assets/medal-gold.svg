@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Medalla de oro">
+  <path fill="#e4564c" d="M40 0h145l87 136H127z"/>
+  <path fill="#c1342a" d="M327 0h145L385 136H240z"/>
+  <circle cx="256" cy="328" r="184" fill="#f2cc57"/>
+  <circle cx="256" cy="328" r="128" fill="#d8b64b"/>
+  <circle cx="256" cy="328" r="96" fill="#f2cc57"/>
+</svg>

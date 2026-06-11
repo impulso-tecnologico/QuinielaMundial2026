@@ -1,73 +1,70 @@
 const API_BASE = (window.QUINIELA_CONFIG?.apiBaseUrl || "").replace(/\/$/, "");
 
 const $ = (selector) => document.querySelector(selector);
-const contenedor = $("#partidos");
-const eliminatorias = $("#eliminatorias");
-const grupoFiltro = $("#grupoFiltro");
-const buscar = $("#buscar");
-const participante = $("#participante");
-const guardarEstado = $("#guardarEstado");
-const balonOro = $("#balonOro");
-const botaOro = $("#botaOro");
-const guanteOro = $("#guanteOro");
+const contenedorPartidos = $("#partidos");
+const contadorVista = $("#contadorVista");
+const fechaPartidosTitulo = $("#fechaPartidosTitulo");
+const fechaPartidosDetalle = $("#fechaPartidosDetalle");
+const topRankingTabla = $("#topRankingTabla");
+const topRankingEstado = $("#topRankingEstado");
+const finalWinnerName = $("#finalWinnerName");
+const finalWinnerVotes = $("#finalWinnerVotes");
+const ballonDOrName = $("#ballonDOrName");
+const ballonDOrVotes = $("#ballonDOrVotes");
 
 let partidos = [];
-let estado = {
-  participante: "",
-  participantId: null,
-  pronosticos: {},
-  eliminatorias: {},
-  equiposDieciseisavos: {},
-  eliminatoriasGeneradas: false,
-  premios: {
-    balonOro: "",
-    botaOro: "",
-    guanteOro: ""
-  }
+
+const CODIGOS_BANDERA_EQUIPOS = {
+  "alemania": "de",
+  "arabia saudita": "sa",
+  "argelia": "dz",
+  "argentina": "ar",
+  "australia": "au",
+  "austria": "at",
+  "belgica": "be",
+  "bosnia y herzegovina": "ba",
+  "brasil": "br",
+  "cabo verde": "cv",
+  "canada": "ca",
+  "chequia": "cz",
+  "colombia": "co",
+  "corea del sur": "kr",
+  "costa de marfil": "ci",
+  "croacia": "hr",
+  "curazao": "cw",
+  "ecuador": "ec",
+  "egipto": "eg",
+  "escocia": "gb-sct",
+  "espana": "es",
+  "estados unidos": "us",
+  "francia": "fr",
+  "ghana": "gh",
+  "haiti": "ht",
+  "inglaterra": "gb-eng",
+  "irak": "iq",
+  "iran": "ir",
+  "japon": "jp",
+  "jordania": "jo",
+  "marruecos": "ma",
+  "mexico": "mx",
+  "noruega": "no",
+  "nueva zelanda": "nz",
+  "paises bajos": "nl",
+  "panama": "pa",
+  "paraguay": "py",
+  "portugal": "pt",
+  "qatar": "qa",
+  "rd congo": "cd",
+  "republica democratica del congo": "cd",
+  "senegal": "sn",
+  "sudafrica": "za",
+  "suecia": "se",
+  "suiza": "ch",
+  "tunez": "tn",
+  "turquia": "tr",
+  "uruguay": "uy",
+  "uzbekistan": "uz"
 };
-
-const llavesRonda32 = [
-  { id: 1, ronda: "Dieciseisavos", equipo1: "1E", equipo2: "3 ABCDF" },
-  { id: 2, ronda: "Dieciseisavos", equipo1: "1I", equipo2: "3 CDFGH" },
-  { id: 3, ronda: "Dieciseisavos", equipo1: "2A", equipo2: "2B" },
-  { id: 4, ronda: "Dieciseisavos", equipo1: "1F", equipo2: "2C" },
-  { id: 5, ronda: "Dieciseisavos", equipo1: "2K", equipo2: "2L" },
-  { id: 6, ronda: "Dieciseisavos", equipo1: "1H", equipo2: "2J" },
-  { id: 7, ronda: "Dieciseisavos", equipo1: "1D", equipo2: "3 BEFIJ" },
-  { id: 8, ronda: "Dieciseisavos", equipo1: "1G", equipo2: "3 AEHIJ" },
-  { id: 9, ronda: "Dieciseisavos", equipo1: "1C", equipo2: "2F" },
-  { id: 10, ronda: "Dieciseisavos", equipo1: "2E", equipo2: "2I" },
-  { id: 11, ronda: "Dieciseisavos", equipo1: "1A", equipo2: "3 CEFHI" },
-  { id: 12, ronda: "Dieciseisavos", equipo1: "1L", equipo2: "3 EHIJK" },
-  { id: 13, ronda: "Dieciseisavos", equipo1: "1J", equipo2: "2H" },
-  { id: 14, ronda: "Dieciseisavos", equipo1: "2D", equipo2: "2G" },
-  { id: 15, ronda: "Dieciseisavos", equipo1: "1B", equipo2: "3 EFGIJ" },
-  { id: 16, ronda: "Dieciseisavos", equipo1: "1K", equipo2: "3 DEIJL" }
-];
-
-const avanceLlaves = [
-  { ronda: "Octavos", partido: 17, equipo1: "Ganador 1", equipo2: "Ganador 2" },
-  { ronda: "Octavos", partido: 18, equipo1: "Ganador 3", equipo2: "Ganador 4" },
-  { ronda: "Octavos", partido: 19, equipo1: "Ganador 5", equipo2: "Ganador 6" },
-  { ronda: "Octavos", partido: 20, equipo1: "Ganador 7", equipo2: "Ganador 8" },
-  { ronda: "Octavos", partido: 21, equipo1: "Ganador 9", equipo2: "Ganador 10" },
-  { ronda: "Octavos", partido: 22, equipo1: "Ganador 11", equipo2: "Ganador 12" },
-  { ronda: "Octavos", partido: 23, equipo1: "Ganador 13", equipo2: "Ganador 14" },
-  { ronda: "Octavos", partido: 24, equipo1: "Ganador 15", equipo2: "Ganador 16" },
-  { ronda: "Cuartos", partido: 25, equipo1: "Ganador 17", equipo2: "Ganador 18" },
-  { ronda: "Cuartos", partido: 26, equipo1: "Ganador 19", equipo2: "Ganador 20" },
-  { ronda: "Cuartos", partido: 27, equipo1: "Ganador 21", equipo2: "Ganador 22" },
-  { ronda: "Cuartos", partido: 28, equipo1: "Ganador 23", equipo2: "Ganador 24" },
-  { ronda: "Semifinal", partido: 29, equipo1: "Ganador 25", equipo2: "Ganador 26" },
-  { ronda: "Semifinal", partido: 30, equipo1: "Ganador 27", equipo2: "Ganador 28" },
-  { ronda: "Tercer lugar", partido: 31, equipo1: "Perdedor 29", equipo2: "Perdedor 30" },
-  { ronda: "Final", partido: 32, equipo1: "Ganador 29", equipo2: "Ganador 30" }
-];
-
-function reiniciarEstadoSesion() {
-  estado = { participante: "", participantId: null, pronosticos: {}, eliminatorias: {}, equiposDieciseisavos: {}, eliminatoriasGeneradas: false, premios: { balonOro: "", botaOro: "", guanteOro: "" } };
-  actualizarInputsPremios();
-}
 
 async function apiJson(url, options = {}) {
   const response = await fetch(`${API_BASE}${url}`, {
@@ -84,161 +81,6 @@ async function apiJson(url, options = {}) {
   return response.json();
 }
 
-function formatearFecha(valor) {
-  const fecha = new Date(valor);
-  return fecha.toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit" }).replace(/\./g, "");
-}
-
-function formatearHora(valor) {
-  return String(valor || "").slice(0, 5);
-}
-
-function mapearPartido(apiMatch) {
-  return {
-    id: apiMatch.id,
-    numero: apiMatch.matchNumber,
-    fecha: formatearFecha(apiMatch.matchDate),
-    hora: formatearHora(apiMatch.matchTime),
-    grupo: apiMatch.group || "",
-    etapa: apiMatch.stageName,
-    local: apiMatch.homeTeam,
-    visitante: apiMatch.awayTeam,
-    estadio: apiMatch.stadium,
-    ciudad: apiMatch.city,
-    realLocal: apiMatch.homeScore,
-    realVisitante: apiMatch.awayScore
-  };
-}
-
-async function cargarPartidos() {
-  const data = await apiJson("/api/matches");
-  partidos = data.map(mapearPartido);
-
-  partidos.forEach(partido => {
-    const p = obtenerPronostico(partido.id);
-    p.realLocal = normalizarMarcador(partido.realLocal);
-    p.realVisitante = normalizarMarcador(partido.realVisitante);
-  });
-}
-
-function mostrarEstadoGuardado(mensaje, tipo = "") {
-  guardarEstado.textContent = mensaje;
-  guardarEstado.className = `guardar-estado ${tipo}`.trim();
-}
-
-function nombreParticipanteCapturado() {
-  return participante.value.trim() !== "";
-}
-
-async function asegurarParticipante(cargarDatos = true) {
-  const nombre = participante.value.trim();
-  if (!nombre) {
-    alert("Captura el nombre del participante antes de guardar.");
-    participante.focus();
-    return null;
-  }
-
-  if (estado.participantId && estado.participante === nombre) return estado.participantId;
-
-  const creado = await apiJson("/api/participants/ensure", {
-    method: "POST",
-    body: JSON.stringify({ name: nombre, email: null })
-  });
-
-  estado.participantId = creado.id;
-  estado.participante = creado.name;
-  participante.value = creado.name;
-  if (cargarDatos) await cargarPronosticos();
-  return estado.participantId;
-}
-
-async function cargarPronosticos() {
-  if (!estado.participantId) return;
-
-  const data = await apiJson(`/api/participants/${estado.participantId}/predictions`);
-  data.forEach(prediccion => {
-    const p = obtenerPronostico(prediccion.matchId);
-    p.predLocal = normalizarMarcador(prediccion.homeScore);
-    p.predVisitante = normalizarMarcador(prediccion.awayScore);
-  });
-
-  await cargarPronosticosEliminatorias();
-  await cargarCrucesEliminatorias();
-  await cargarPronosticosPremios();
-}
-
-async function cargarPronosticosEliminatorias() {
-  if (!estado.participantId) return;
-
-  estado.eliminatorias = {};
-  const data = await apiJson(`/api/participants/${estado.participantId}/knockout-predictions`);
-  data.forEach(prediccion => {
-    estado.eliminatorias[prediccion.bracketMatchNumber] = {
-      local: normalizarMarcador(prediccion.homeScore),
-      visitante: normalizarMarcador(prediccion.awayScore)
-    };
-  });
-}
-
-async function cargarCrucesEliminatorias() {
-  if (!estado.participantId) return;
-
-  const data = await apiJson(`/api/participants/${estado.participantId}/knockout-brackets`);
-  estado.eliminatoriasGeneradas = Array.isArray(data) && data.length > 0;
-  estado.equiposDieciseisavos = {};
-
-  if (!estado.eliminatoriasGeneradas) return;
-
-  data
-    .filter(cruce => cruce.bracketMatchNumber >= 1 && cruce.bracketMatchNumber <= 16)
-    .forEach(cruce => {
-      estado.equiposDieciseisavos[crearClaveEquipoDieciseisavos(cruce.bracketMatchNumber, 0)] = cruce.homeTeamName;
-      estado.equiposDieciseisavos[crearClaveEquipoDieciseisavos(cruce.bracketMatchNumber, 1)] = cruce.awayTeamName;
-    });
-}
-
-async function cargarPronosticosPremios() {
-  if (!estado.participantId) return;
-
-  const data = await apiJson(`/api/participants/${estado.participantId}/award-predictions`);
-  estado.premios = {
-    balonOro: data?.ballonDOr || "",
-    botaOro: data?.goldenBoot || "",
-    guanteOro: data?.goldenGlove || ""
-  };
-  actualizarInputsPremios();
-}
-
-function actualizarInputsPremios() {
-  balonOro.value = estado.premios?.balonOro || "";
-  botaOro.value = estado.premios?.botaOro || "";
-  guanteOro.value = estado.premios?.guanteOro || "";
-}
-
-function llenarGrupos() {
-  grupoFiltro.querySelectorAll("option:not([value='TODOS'])").forEach(option => option.remove());
-  const grupos = [...new Set(partidos.map(p => p.grupo).filter(Boolean))].sort();
-  grupos.forEach(g => {
-    const option = document.createElement("option");
-    option.value = g;
-    option.textContent = `Grupo ${g}`;
-    grupoFiltro.appendChild(option);
-  });
-}
-
-function valorNumero(valor) {
-  if (valor === "" || valor === null || valor === undefined) return null;
-  const numero = Number(valor);
-  return Number.isInteger(numero) && numero >= 0 ? numero : null;
-}
-
-function normalizarTexto(valor) {
-  return String(valor || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
 function escaparHtml(valor) {
   return String(valor ?? "").replace(/[&<>"']/g, caracter => ({
     "&": "&amp;",
@@ -249,884 +91,280 @@ function escaparHtml(valor) {
   }[caracter]));
 }
 
-function obtenerEquiposParticipantes() {
-  const equipos = new Set();
-  partidos.filter(partido => partido.grupo).forEach(partido => {
-    if (partido.local) equipos.add(partido.local);
-    if (partido.visitante) equipos.add(partido.visitante);
-  });
-
-  return [...equipos].sort((a, b) => a.localeCompare(b, "es"));
+function normalizarNombreEquipo(valor) {
+  return String(valor || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
-function crearClaveEquipoDieciseisavos(partido, posicion) {
-  return `${partido}:${posicion}`;
+function obtenerRutaBandera(nombreEquipo) {
+  const codigo = CODIGOS_BANDERA_EQUIPOS[normalizarNombreEquipo(nombreEquipo)];
+  return codigo ? `assets/flags/4x3/${codigo}.svg` : "";
 }
 
-function aplicarEquipoDieciseisavos(cruce, equipo, posicion) {
-  const seleccionado = estado.equiposDieciseisavos?.[crearClaveEquipoDieciseisavos(cruce.id, posicion)]?.trim();
-  if (!seleccionado || seleccionado === equipo.equipo) return equipo;
+function renderizarBanderaEquipo(nombreEquipo, className = "") {
+  const ruta = obtenerRutaBandera(nombreEquipo);
+  if (!ruta) return "";
 
-  return { ...equipo, equipo: seleccionado, origen: "Selección manual" };
+  return `<img class="flag-equipo ${className}" src="${ruta}" alt="Bandera de ${escaparHtml(nombreEquipo)}" loading="lazy">`;
 }
 
-function renderizarOpcionesEquipo(valorSeleccionado) {
-  const seleccionado = String(valorSeleccionado || "");
-  const equipos = obtenerEquiposParticipantes();
-  const opciones = seleccionado && !equipos.includes(seleccionado) ? [seleccionado, ...equipos] : equipos;
-
-  return opciones.map(equipo => {
-    const selected = equipo === seleccionado ? "selected" : "";
-    return `<option value="${escaparHtml(equipo)}" ${selected}>${escaparHtml(equipo)}</option>`;
-  }).join("");
-}
-
-function normalizarMarcador(valor) {
-  const numero = valorNumero(valor);
-  return numero === null ? "" : String(numero);
-}
-
-function obtenerPronostico(id) {
-  if (!estado.pronosticos || typeof estado.pronosticos !== "object") estado.pronosticos = {};
-
-  if (!estado.pronosticos[id]) {
-    estado.pronosticos[id] = {
-      predLocal: "",
-      predVisitante: "",
-      realLocal: "",
-      realVisitante: ""
-    };
-  }
-
-  return estado.pronosticos[id];
-}
-
-function resultadoTipo(golesLocal, golesVisitante) {
-  if (golesLocal > golesVisitante) return "L";
-  if (golesVisitante > golesLocal) return "V";
-  return "E";
-}
-
-function calcularPuntos(id) {
-  const p = obtenerPronostico(id);
-  const predLocal = valorNumero(p.predLocal);
-  const predVisitante = valorNumero(p.predVisitante);
-  const realLocal = valorNumero(p.realLocal);
-  const realVisitante = valorNumero(p.realVisitante);
-
-  if ([predLocal, predVisitante, realLocal, realVisitante].some(v => v === null)) return null;
-  if (predLocal === realLocal && predVisitante === realVisitante) return 3;
-
-  return resultadoTipo(predLocal, predVisitante) === resultadoTipo(realLocal, realVisitante) ? 1 : 0;
-}
-
-function tieneMarcadorCapturado(id) {
-  const p = obtenerPronostico(id);
-  return p.predLocal !== "" && p.predVisitante !== "";
-}
-
-function renderizarPartidos() {
-  const grupo = grupoFiltro.value;
-  const texto = normalizarTexto(buscar.value.trim());
-  const inputsDeshabilitados = nombreParticipanteCapturado() ? "" : "disabled";
-
-  const filtrados = partidos.filter(p => {
-    const coincideGrupo = grupo === "TODOS" || p.grupo === grupo;
-    const textoPartido = normalizarTexto(`${p.local} ${p.visitante} ${p.estadio} ${p.ciudad} ${p.fecha}`);
-    return coincideGrupo && (texto === "" || textoPartido.includes(texto));
-  });
-
-  contenedor.innerHTML = "";
-
-  filtrados.forEach(partido => {
-    const p = obtenerPronostico(partido.id);
-    const card = document.createElement("article");
-    card.className = tieneMarcadorCapturado(partido.id) ? "partido partido-capturado" : "partido";
-    card.innerHTML = `
-      <div class="partido-header">
-        <span class="match-id">Partido ${partido.numero}</span>
-        <span class="grupo">${partido.grupo ? `Grupo ${partido.grupo}` : partido.etapa}</span>
-      </div>
-
-      <div class="fecha">
-        <strong>${partido.fecha}</strong> · ${partido.hora} hrs · Hora local del estadio
-      </div>
-
-      <div class="equipos">
-        <div class="equipo-local">${partido.local}</div>
-        <div class="vs">VS</div>
-        <div>${partido.visitante}</div>
-      </div>
-
-      <div>
-        <div class="caption">Tu pronóstico</div>
-        <div class="pronostico">
-          <span class="caption">${partido.local}</span>
-          <input type="number" min="0" inputmode="numeric" data-id="${partido.id}" data-campo="predLocal" value="${p.predLocal}" ${inputsDeshabilitados}>
-          <span class="separador">-</span>
-          <input type="number" min="0" inputmode="numeric" data-id="${partido.id}" data-campo="predVisitante" value="${p.predVisitante}" ${inputsDeshabilitados}>
-          <span class="caption">${partido.visitante}</span>
-        </div>
-      </div>
-
-      <div class="partido-header">
-        <div class="sede">${partido.estadio}<br>${partido.ciudad}</div>
-      </div>
-    `;
-
-    contenedor.appendChild(card);
-  });
-
-  $("#contadorVista").textContent = `${filtrados.length} de ${partidos.length} partidos`;
-  activarEventosInputs();
-  actualizarResumen();
-  renderizarEliminatorias();
-}
-
-function activarEventosInputs() {
-  document.querySelectorAll("[data-id][data-campo]").forEach(input => {
-    input.addEventListener("input", (e) => {
-      if (!nombreParticipanteCapturado()) {
-        e.target.value = "";
-        mostrarEstadoGuardado("Captura el nombre del participante antes de llenar marcadores.", "error");
-        participante.focus();
-        return;
-      }
-
-      if (e.target.value !== "" && Number(e.target.value) < 0) e.target.value = 0;
-
-      const id = e.target.dataset.id;
-      const campo = e.target.dataset.campo;
-      obtenerPronostico(id)[campo] = e.target.value;
-      e.target.closest(".partido")?.classList.toggle("partido-capturado", tieneMarcadorCapturado(id));
-      if (campo === "predLocal" || campo === "predVisitante") {
-        estado.eliminatoriasGeneradas = false;
-        estado.equiposDieciseisavos = {};
-      }
-      actualizarResumen();
-      renderizarEliminatorias();
-    });
-
-  });
-}
-
-function actualizarResumen() {
-  let pronosticados = 0;
-  let conResultado = 0;
-  let puntosTotales = 0;
-
-  partidos.forEach(partido => {
-    const p = obtenerPronostico(partido.id);
-    const tienePrediccion = valorNumero(p.predLocal) !== null && valorNumero(p.predVisitante) !== null;
-    const tieneResultado = valorNumero(p.realLocal) !== null && valorNumero(p.realVisitante) !== null;
-    const puntos = calcularPuntos(partido.id);
-
-    if (tienePrediccion) pronosticados++;
-    if (tieneResultado) conResultado++;
-    if (puntos !== null) puntosTotales += puntos;
-  });
-
-  $("#totalPartidos").textContent = partidos.length;
-  $("#pronosticados").textContent = pronosticados;
-  $("#conResultado").textContent = conResultado;
-  $("#puntosTotales").textContent = puntosTotales;
-}
-
-function crearTablaGrupos() {
-  const grupos = {};
-  let partidosConPronostico = 0;
-
-  partidos.filter(partido => partido.grupo).forEach(partido => {
-    if (!grupos[partido.grupo]) grupos[partido.grupo] = {};
-    [partido.local, partido.visitante].forEach(equipo => {
-      if (!grupos[partido.grupo][equipo]) {
-        grupos[partido.grupo][equipo] = {
-          equipo,
-          grupo: partido.grupo,
-          pj: 0,
-          pts: 0,
-          gf: 0,
-          gc: 0,
-          dg: 0,
-          fairPlay: 0,
-          rankingFifa: 999,
-          partidos: []
-        };
-      }
-    });
-
-    const p = obtenerPronostico(partido.id);
-    const predLocal = valorNumero(p.predLocal);
-    const predVisitante = valorNumero(p.predVisitante);
-    if (predLocal === null || predVisitante === null) return;
-
-    partidosConPronostico++;
-    const local = grupos[partido.grupo][partido.local];
-    const visitante = grupos[partido.grupo][partido.visitante];
-
-    local.pj++;
-    visitante.pj++;
-    local.gf += predLocal;
-    local.gc += predVisitante;
-    visitante.gf += predVisitante;
-    visitante.gc += predLocal;
-
-    if (predLocal > predVisitante) local.pts += 3;
-    else if (predVisitante > predLocal) visitante.pts += 3;
-    else {
-      local.pts++;
-      visitante.pts++;
-    }
-
-    local.partidos.push({ rival: partido.visitante, gf: predLocal, gc: predVisitante, pts: predLocal > predVisitante ? 3 : predLocal === predVisitante ? 1 : 0 });
-    visitante.partidos.push({ rival: partido.local, gf: predVisitante, gc: predLocal, pts: predVisitante > predLocal ? 3 : predLocal === predVisitante ? 1 : 0 });
-  });
-
-  Object.values(grupos).forEach(grupo => {
-    Object.values(grupo).forEach(equipo => {
-      equipo.dg = equipo.gf - equipo.gc;
-    });
-  });
-
-  return { grupos, partidosConPronostico };
-}
-
-function estadisticaEntreEquipos(equipo, rivales) {
-  return equipo.partidos
-    .filter(partido => rivales.has(partido.rival))
-    .reduce((total, partido) => ({
-      pts: total.pts + partido.pts,
-      gf: total.gf + partido.gf,
-      gc: total.gc + partido.gc,
-      dg: total.dg + partido.gf - partido.gc
-    }), { pts: 0, gf: 0, gc: 0, dg: 0 });
-}
-
-function compararDesempateGrupo(a, b, empatados = []) {
-  const rivales = new Set(empatados.map(equipo => equipo.equipo));
-  rivales.delete(a.equipo);
-  rivales.delete(b.equipo);
-
-  if (empatados.length > 1) {
-    const h2hA = estadisticaEntreEquipos(a, new Set(empatados.filter(e => e.equipo !== a.equipo).map(e => e.equipo)));
-    const h2hB = estadisticaEntreEquipos(b, new Set(empatados.filter(e => e.equipo !== b.equipo).map(e => e.equipo)));
-    const h2h = btoaSafe(h2hB.pts - h2hA.pts || h2hB.dg - h2hA.dg || h2hB.gf - h2hA.gf);
-    if (h2h !== 0) return h2h;
-  }
-
-  return b.dg - a.dg || b.gf - a.gf || a.fairPlay - b.fairPlay || a.rankingFifa - b.rankingFifa || a.equipo.localeCompare(b.equipo, "es");
-}
-
-function btoaSafe(valor) {
-  return Number.isFinite(valor) ? valor : 0;
-}
-
-function ordenarTablaGrupo(equipos) {
-  return [...equipos].sort((a, b) => {
-    const puntos = b.pts - a.pts;
-    if (puntos !== 0) return puntos;
-
-    const empatados = equipos.filter(equipo => equipo.pts === a.pts);
-    return compararDesempateGrupo(a, b, empatados);
-  });
-}
-
-function compararMejoresTerceros(a, b) {
-  return b.pts - a.pts || b.dg - a.dg || b.gf - a.gf || a.fairPlay - b.fairPlay || a.rankingFifa - b.rankingFifa || a.equipo.localeCompare(b.equipo, "es");
-}
-
-function obtenerClasificados() {
-  const { grupos, partidosConPronostico } = crearTablaGrupos();
-  const ganadores = [];
-  const segundos = [];
-  const terceros = [];
-  const tablas = {};
-
-  Object.keys(grupos).sort().forEach(grupo => {
-    const tabla = ordenarTablaGrupo(Object.values(grupos[grupo]));
-    tablas[grupo] = tabla;
-    if (tabla[0]) ganadores.push({ ...tabla[0], origen: `1 Grupo ${grupo}` });
-    if (tabla[1]) segundos.push({ ...tabla[1], origen: `2 Grupo ${grupo}` });
-    if (tabla[2]) terceros.push({ ...tabla[2], origen: `3 Grupo ${grupo}` });
-  });
-
-  const mejoresTerceros = terceros.sort(compararMejoresTerceros).slice(0, 8);
-
-  return {
-    tablas,
-    ganadores,
-    segundos,
-    mejoresTerceros,
-    partidosConPronostico
-  };
-}
-
-function esReferenciaTercero(referencia) {
-  return referencia.startsWith("3 ");
-}
-
-function crearClaveTercero(partido, posicion) {
-  return `${partido}:${posicion}`;
-}
-
-function asignarTercerosALlave(llaves, clasificados) {
-  const slots = [];
-
-  llaves.forEach(llave => {
-    [llave.equipo1, llave.equipo2].forEach((referencia, posicion) => {
-      if (!esReferenciaTercero(referencia)) return;
-
-      const gruposPermitidos = new Set((referencia.split(" ")[1] || "").split(""));
-      const candidatos = clasificados.mejoresTerceros.filter(equipo => gruposPermitidos.has(equipo.grupo));
-      slots.push({
-        partido: llave.id,
-        posicion,
-        referencia,
-        candidatos,
-        ordenOriginal: slots.length
-      });
-    });
-  });
-
-  const slotsOrdenados = [...slots].sort((a, b) =>
-    a.candidatos.length - b.candidatos.length || a.ordenOriginal - b.ordenOriginal
-  );
-
-  const asignaciones = new Map();
-  const equiposUsados = new Set();
-
-  function buscar(indice) {
-    if (indice >= slotsOrdenados.length) return true;
-
-    const slot = slotsOrdenados[indice];
-    for (const candidato of slot.candidatos) {
-      if (equiposUsados.has(candidato.equipo)) continue;
-
-      equiposUsados.add(candidato.equipo);
-      asignaciones.set(crearClaveTercero(slot.partido, slot.posicion), candidato);
-
-      if (buscar(indice + 1)) return true;
-
-      asignaciones.delete(crearClaveTercero(slot.partido, slot.posicion));
-      equiposUsados.delete(candidato.equipo);
-    }
-
-    return false;
-  }
-
-  return buscar(0) ? asignaciones : new Map();
-}
-
-function resolverClasificado(referencia, clasificados, tercerosAsignados, terceroAsignado = null) {
-  const partes = referencia.split(" ");
-  const posicion = Number(partes[0][0]);
-
-  if (posicion === 1 || posicion === 2) {
-    const grupo = partes[0][1];
-    const equipo = clasificados.tablas[grupo]?.[posicion - 1];
-    return equipo ? { ...equipo, origen: `${posicion} Grupo ${grupo}` } : { equipo: referencia, origen: "Por definir" };
-  }
-
-  if (terceroAsignado) {
-    tercerosAsignados.add(terceroAsignado.equipo);
-    return { ...terceroAsignado, origen: `3 Grupo ${terceroAsignado.grupo}` };
-  }
-
-  const gruposPermitidos = new Set((partes[1] || "").split(""));
-  const elegido = clasificados.mejoresTerceros.find(equipo => gruposPermitidos.has(equipo.grupo) && !tercerosAsignados.has(equipo.equipo));
-  if (!elegido) return { equipo: referencia, origen: "Tercer lugar por definir" };
-
-  tercerosAsignados.add(elegido.equipo);
-  return { ...elegido, origen: `3 Grupo ${elegido.grupo}` };
-}
-
-function obtenerPartidoEliminacion(numero) {
-  return partidos.find(partido => !partido.grupo && partido.numero === numero);
-}
-
-function obtenerMarcadorEliminacion(numero) {
-  const marcadorLocal = estado.eliminatorias?.[numero];
-  if (marcadorLocal) {
-    const local = valorNumero(marcadorLocal.local);
-    const visitante = valorNumero(marcadorLocal.visitante);
-    if (local !== null && visitante !== null && local !== visitante) return { local, visitante };
-  }
-
-  return null;
-}
-
-function resolverResultadoLlave(llave, resultados) {
-  const marcador = obtenerMarcadorEliminacion(llave.partido || llave.id);
-  if (!marcador) return;
-
-  resultados[llave.partido || llave.id] = {
-    ganador: marcador.local > marcador.visitante ? llave.equipos[0] : llave.equipos[1],
-    perdedor: marcador.local > marcador.visitante ? llave.equipos[1] : llave.equipos[0]
-  };
-}
-
-function llaveTieneGanador(llave) {
-  return obtenerMarcadorEliminacion(llave.partido || llave.id) !== null;
-}
-
-function resolverReferenciaAvance(referencia, resultados) {
-  const [tipo, numeroTexto] = referencia.split(" ");
-  const resultado = resultados[Number(numeroTexto)];
-  if (!resultado) return { equipo: referencia, origen: "Por definir" };
-  return tipo === "Perdedor" ? resultado.perdedor : resultado.ganador;
-}
-
-function crearRondasEliminatorias(clasificados) {
-  const tercerosAsignados = new Set();
-  const resultados = {};
-  const tercerosPorSlot = asignarTercerosALlave(llavesRonda32, clasificados);
-
-  const dieciseisavos = llavesRonda32.map(llave => {
-    const equipos = [
-      resolverClasificado(llave.equipo1, clasificados, tercerosAsignados, tercerosPorSlot.get(crearClaveTercero(llave.id, 0))),
-      resolverClasificado(llave.equipo2, clasificados, tercerosAsignados, tercerosPorSlot.get(crearClaveTercero(llave.id, 1)))
-    ];
-
-    return {
-      id: llave.id,
-      partido: llave.id,
-      ronda: llave.ronda,
-      equipos: equipos.map((equipo, index) => aplicarEquipoDieciseisavos(llave, equipo, index))
-    };
-  });
-
-  dieciseisavos.forEach(llave => resolverResultadoLlave(llave, resultados));
-
-  const rondas = [{ nombre: "Dieciseisavos", cruces: dieciseisavos }];
-  if (!dieciseisavos.every(llaveTieneGanador)) return rondas;
-
-  const crearCrucesAvance = (ronda) => avanceLlaves.filter(llave => llave.ronda === ronda).map(llave => {
-    const cruce = {
-      id: llave.partido,
-      partido: llave.partido,
-      ronda: llave.ronda,
-      equipos: [resolverReferenciaAvance(llave.equipo1, resultados), resolverReferenciaAvance(llave.equipo2, resultados)]
-    };
-    resolverResultadoLlave(cruce, resultados);
-    return cruce;
-  });
-
-  const octavos = crearCrucesAvance("Octavos");
-  rondas.push({ nombre: "Octavos", cruces: octavos });
-  if (!octavos.every(llaveTieneGanador)) return rondas;
-
-  const cuartos = crearCrucesAvance("Cuartos");
-  rondas.push({ nombre: "Cuartos", cruces: cuartos });
-  if (!cuartos.every(llaveTieneGanador)) return rondas;
-
-  const semifinal = crearCrucesAvance("Semifinal");
-  rondas.push({ nombre: "Semifinal", cruces: semifinal });
-  if (!semifinal.every(llaveTieneGanador)) return rondas;
-
-  rondas.push({ nombre: "Tercer lugar", cruces: crearCrucesAvance("Tercer lugar") });
-  rondas.push({ nombre: "Final", cruces: crearCrucesAvance("Final") });
-  return rondas;
-}
-
-function renderizarControlEquipo(cruce, equipo, index, editable, inputsDeshabilitados) {
-  if (!editable) return `<span>${escaparHtml(equipo.equipo)}</span>`;
+function renderizarEquipoConBandera(nombreEquipo, modificador = "") {
+  const clase = modificador ? ` equipo-bandera-${modificador}` : "";
 
   return `
-    <select class="selector-equipo-llave" data-equipo-llave="${cruce.partido}" data-equipo-pos="${index}" ${inputsDeshabilitados}>
-      ${renderizarOpcionesEquipo(equipo.equipo)}
-    </select>
+    <span class="equipo-con-bandera${clase}">
+      ${renderizarBanderaEquipo(nombreEquipo)}
+      <span>${escaparHtml(nombreEquipo)}</span>
+    </span>
   `;
 }
 
-function renderizarEliminatorias() {
-  const clasificados = obtenerClasificados();
-  const { partidosConPronostico } = clasificados;
-  const estadoTexto = $("#estadoEliminatorias");
-  const totalGrupos = partidos.filter(partido => partido.grupo).length;
-  const inputsDeshabilitados = nombreParticipanteCapturado() ? "" : "disabled";
-
-  if (!estado.eliminatoriasGeneradas) {
-    estadoTexto.textContent = `${partidosConPronostico} de ${totalGrupos} pronósticos capturados`;
-    eliminatorias.innerHTML = `
-      <div class="placeholder" style="grid-column: 1 / -1;">
-        Captura todos los marcadores de fase de grupos y presiona Generar fases finales.
-      </div>
-    `;
-    return;
-  }
-
-  if (partidosConPronostico < totalGrupos) {
-    estadoTexto.textContent = `${partidosConPronostico} de ${totalGrupos} pronósticos capturados`;
-    eliminatorias.innerHTML = `
-      <div class="placeholder" style="grid-column: 1 / -1;">
-        Captura todos los pronósticos de fase de grupos para generar tu llave de 32 clasificados.
-        Se usan puntos, diferencia de goles, goles a favor y goles en contra como criterios de desempate.
-      </div>
-    `;
-    return;
-  }
-
-  const rondasEliminatorias = crearRondasEliminatorias(clasificados);
-  const ultimaRonda = rondasEliminatorias[rondasEliminatorias.length - 1]?.nombre || "Dieciseisavos";
-  estadoTexto.textContent = ultimaRonda === "Final" ? "Final y tercer lugar abiertos" : `Ronda activa: ${ultimaRonda}`;
-  eliminatorias.innerHTML = "";
-
-  rondasEliminatorias.forEach(ronda => {
-    const columna = document.createElement("section");
-    columna.className = "ronda";
-    columna.innerHTML = `<h3>${ronda.nombre}</h3>`;
-
-    ronda.cruces.forEach(cruce => {
-      const card = document.createElement("div");
-      card.className = "cruce";
-      const marcador = estado.eliminatorias?.[cruce.partido] || { local: "", visitante: "" };
-      const equiposEditables = ronda.nombre === "Dieciseisavos";
-      card.innerHTML = `
-        <div class="cruce-id">Partido ${cruce.partido}</div>
-        ${cruce.equipos.map((equipo, index) => `
-          <div class="cruce-equipo">
-            ${renderizarControlEquipo(cruce, equipo, index, equiposEditables, inputsDeshabilitados)}
-            <div class="cruce-marcador">
-              <small>${escaparHtml(equipo.origen)}</small>
-              <input type="number" min="0" inputmode="numeric" data-llave="${cruce.partido}" data-pos="${index === 0 ? "local" : "visitante"}" value="${escaparHtml(index === 0 ? marcador.local : marcador.visitante)}" ${inputsDeshabilitados}>
-            </div>
-          </div>
-        `).join("")}
-      `;
-      columna.appendChild(card);
-    });
-
-    eliminatorias.appendChild(columna);
-  });
-
-  activarEventosEliminatorias();
+function obtenerClaveFechaLocal(fecha) {
+  const year = fecha.getFullYear();
+  const month = String(fecha.getMonth() + 1).padStart(2, "0");
+  const day = String(fecha.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-function activarEventosEliminatorias() {
-  document.querySelectorAll("[data-equipo-llave][data-equipo-pos]").forEach(select => {
-    select.addEventListener("change", (e) => {
-      if (!nombreParticipanteCapturado()) {
-        e.target.value = "";
-        mostrarEstadoGuardado("Captura el nombre del participante antes de cambiar equipos.", "error");
-        participante.focus();
-        return;
-      }
+function obtenerClaveFechaPartido(valor) {
+  if (!valor) return "";
 
-      const llave = e.target.dataset.equipoLlave;
-      const posicion = Number(e.target.dataset.equipoPos);
-      if (!estado.equiposDieciseisavos || typeof estado.equiposDieciseisavos !== "object") estado.equiposDieciseisavos = {};
-      estado.equiposDieciseisavos[crearClaveEquipoDieciseisavos(llave, posicion)] = e.target.value;
-      renderizarEliminatorias();
-    });
-  });
+  const texto = String(valor);
+  const match = texto.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) return `${match[1]}-${match[2]}-${match[3]}`;
 
-  document.querySelectorAll("[data-llave][data-pos]").forEach(input => {
-    input.addEventListener("input", (e) => {
-      if (!nombreParticipanteCapturado()) {
-        e.target.value = "";
-        mostrarEstadoGuardado("Captura el nombre del participante antes de llenar marcadores.", "error");
-        participante.focus();
-        return;
-      }
-
-      if (e.target.value !== "" && Number(e.target.value) < 0) e.target.value = 0;
-
-      const llave = e.target.dataset.llave;
-      const pos = e.target.dataset.pos;
-      if (!estado.eliminatorias[llave]) estado.eliminatorias[llave] = { local: "", visitante: "" };
-      estado.eliminatorias[llave][pos] = e.target.value;
-    });
-
-    input.addEventListener("change", () => {
-      renderizarEliminatorias();
-    });
-  });
+  const fecha = new Date(valor);
+  if (Number.isNaN(fecha.getTime())) return "";
+  return obtenerClaveFechaLocal(fecha);
 }
 
-function generarFasesFinales() {
-  if (!nombreParticipanteCapturado()) {
-    mostrarEstadoGuardado("Captura el nombre del participante antes de generar fases finales.", "error");
-    participante.focus();
-    return;
-  }
-
-  const { partidosConPronostico } = obtenerClasificados();
-  const totalGrupos = partidos.filter(partido => partido.grupo).length;
-
-  if (partidosConPronostico < totalGrupos) {
-    alert(`Faltan ${totalGrupos - partidosConPronostico} pronósticos de fase de grupos.`);
-    return;
-  }
-
-  estado.eliminatoriasGeneradas = true;
-  renderizarEliminatorias();
+function crearFechaDesdeClave(clave) {
+  const [year, month, day] = clave.split("-").map(Number);
+  return new Date(year, month - 1, day);
 }
 
-function obtenerCrucesEliminatoriasGenerados() {
-  if (!estado.eliminatoriasGeneradas) return [];
+function formatearFechaClave(clave) {
+  if (!clave) return "Fecha por definir";
 
-  const clasificados = obtenerClasificados();
-  const totalGrupos = partidos.filter(partido => partido.grupo).length;
-  if (clasificados.partidosConPronostico < totalGrupos) return [];
-
-  return crearRondasEliminatorias(clasificados).flatMap(ronda => ronda.cruces.map(cruce => ({
-    bracketMatchNumber: cruce.partido,
-    roundName: ronda.nombre,
-    homeTeamName: cruce.equipos[0]?.equipo || "Por definir",
-    awayTeamName: cruce.equipos[1]?.equipo || "Por definir",
-    homeSource: cruce.equipos[0]?.origen || null,
-    awaySource: cruce.equipos[1]?.origen || null
-  })));
+  return crearFechaDesdeClave(clave)
+    .toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })
+    .replace(/\./g, "");
 }
 
-function obtenerPronosticosGrupoCompletos() {
-  return partidos
-    .filter(partido => partido.grupo)
-    .map(partido => ({ partido, pronostico: obtenerPronostico(partido.id) }))
-    .filter(({ pronostico }) => valorNumero(pronostico.predLocal) !== null && valorNumero(pronostico.predVisitante) !== null);
+function formatearHora(valor) {
+  return String(valor || "").slice(0, 5);
 }
 
-function obtenerPronosticosEliminatoriaCompletos() {
-  return Object.entries(estado.eliminatorias || {})
-    .map(([llave, marcador]) => ({ llave, marcador }))
-    .filter(({ marcador }) => valorNumero(marcador.local) !== null && valorNumero(marcador.visitante) !== null);
+function valorMarcador(valor) {
+  if (valor === null || valor === undefined || valor === "") return null;
+  const numero = Number(valor);
+  return Number.isInteger(numero) && numero >= 0 ? numero : null;
 }
 
-function validarEquiposDieciseisavosUnicos(crucesEliminatoria) {
-  const vistos = new Map();
-  const dieciseisavos = crucesEliminatoria.filter(cruce => cruce.bracketMatchNumber >= 1 && cruce.bracketMatchNumber <= 16);
+function mapearPartido(apiMatch) {
+  const fechaClave = obtenerClaveFechaPartido(apiMatch.matchDate);
 
-  for (const cruce of dieciseisavos) {
-    const equipos = [
-      { nombre: cruce.homeTeamName, selector: `[data-equipo-llave="${cruce.bracketMatchNumber}"][data-equipo-pos="0"]` },
-      { nombre: cruce.awayTeamName, selector: `[data-equipo-llave="${cruce.bracketMatchNumber}"][data-equipo-pos="1"]` }
-    ];
-
-    for (const equipo of equipos) {
-      const nombre = String(equipo.nombre || "").trim();
-      if (!nombre) {
-        return {
-          mensaje: `Selecciona los dos equipos del Partido ${cruce.bracketMatchNumber} de dieciseisavos de final.`,
-          selector: equipo.selector
-        };
-      }
-
-      const clave = normalizarTexto(nombre);
-      if (vistos.has(clave)) {
-        return {
-          mensaje: `${nombre} está repetido en dieciseisavos de final. Cada equipo debe aparecer una sola vez en la llave.`,
-          selector: equipo.selector
-        };
-      }
-
-      vistos.set(clave, equipo.selector);
-    }
-  }
-
-  return null;
-}
-
-function sincronizarPremiosDesdeInputs() {
-  estado.premios = {
-    balonOro: balonOro.value.trim(),
-    botaOro: botaOro.value.trim(),
-    guanteOro: guanteOro.value.trim()
+  return {
+    id: apiMatch.id,
+    numero: apiMatch.matchNumber,
+    fechaClave,
+    fecha: formatearFechaClave(fechaClave),
+    hora: formatearHora(apiMatch.matchTime),
+    grupo: apiMatch.group || "",
+    etapa: apiMatch.stageName || "",
+    local: apiMatch.homeTeam || "Por definir",
+    visitante: apiMatch.awayTeam || "Por definir",
+    estadio: apiMatch.stadium || "Sede por definir",
+    ciudad: apiMatch.city || "Ciudad por definir",
+    realLocal: apiMatch.homeScore,
+    realVisitante: apiMatch.awayScore
   };
 }
 
-function enfocarCampoValidacion(selector) {
-  if (!selector) return;
+function seleccionarPartidosPorFecha(partidosDisponibles) {
+  const fechas = [...new Set(partidosDisponibles.map(partido => partido.fechaClave).filter(Boolean))].sort();
+  const hoy = obtenerClaveFechaLocal(new Date());
 
-  const elemento = document.querySelector(selector);
-  if (!elemento) return;
+  if (fechas.length === 0) {
+    return { fecha: "", tipo: "sin-fechas", partidos: [] };
+  }
 
-  elemento.scrollIntoView({ behavior: "smooth", block: "center" });
-  if (typeof elemento.focus === "function") elemento.focus();
+  if (fechas.includes(hoy)) {
+    return { fecha: hoy, tipo: "hoy", partidos: partidosDisponibles.filter(partido => partido.fechaClave === hoy) };
+  }
+
+  const proximaFecha = fechas.find(fecha => fecha > hoy);
+  if (proximaFecha) {
+    return { fecha: proximaFecha, tipo: "proxima", partidos: partidosDisponibles.filter(partido => partido.fechaClave === proximaFecha) };
+  }
+
+  const ultimaFecha = fechas[fechas.length - 1];
+  return { fecha: ultimaFecha, tipo: "ultima", partidos: partidosDisponibles.filter(partido => partido.fechaClave === ultimaFecha) };
 }
 
-function validarPrediccionesCompletas() {
-  if (!nombreParticipanteCapturado()) {
-    return { mensaje: "Captura el nombre del participante antes de guardar.", selector: "#participante" };
-  }
-
-  for (const partido of partidos.filter(partido => partido.grupo)) {
-    const pronostico = obtenerPronostico(partido.id);
-    if (valorNumero(pronostico.predLocal) === null) {
-      return {
-        mensaje: `Falta capturar marcador de ${partido.local} en el Partido ${partido.numero}.`,
-        selector: `[data-id="${partido.id}"][data-campo="predLocal"]`
-      };
-    }
-
-    if (valorNumero(pronostico.predVisitante) === null) {
-      return {
-        mensaje: `Falta capturar marcador de ${partido.visitante} en el Partido ${partido.numero}.`,
-        selector: `[data-id="${partido.id}"][data-campo="predVisitante"]`
-      };
-    }
-  }
-
-  if (!estado.eliminatoriasGeneradas) {
-    return {
-      mensaje: "Genera las fases finales antes de guardar predicciones.",
-      selector: "#btnGenerarFasesFinales"
-    };
-  }
-
-  const crucesEliminatoria = obtenerCrucesEliminatoriasGenerados();
-  if (crucesEliminatoria.length < 32) {
-    return {
-      mensaje: `Completa todos los marcadores de fases finales hasta Final y Tercer lugar antes de guardar. Cruces generados: ${crucesEliminatoria.length} de 32.`,
-      selector: "#eliminatorias"
-    };
-  }
-
-  const validacionDieciseisavos = validarEquiposDieciseisavosUnicos(crucesEliminatoria);
-  if (validacionDieciseisavos) return validacionDieciseisavos;
-
-  for (const cruce of crucesEliminatoria) {
-    const marcador = estado.eliminatorias?.[cruce.bracketMatchNumber] || {};
-    const local = valorNumero(marcador.local);
-    const visitante = valorNumero(marcador.visitante);
-
-    if (local === null) {
-      return {
-        mensaje: `Falta capturar marcador local del Partido ${cruce.bracketMatchNumber} de ${cruce.roundName}.`,
-        selector: `[data-llave="${cruce.bracketMatchNumber}"][data-pos="local"]`
-      };
-    }
-
-    if (visitante === null) {
-      return {
-        mensaje: `Falta capturar marcador visitante del Partido ${cruce.bracketMatchNumber} de ${cruce.roundName}.`,
-        selector: `[data-llave="${cruce.bracketMatchNumber}"][data-pos="visitante"]`
-      };
-    }
-
-    if (local === visitante) {
-      return {
-        mensaje: `El Partido ${cruce.bracketMatchNumber} de ${cruce.roundName} no puede quedar empatado en fases finales.`,
-        selector: `[data-llave="${cruce.bracketMatchNumber}"][data-pos="local"]`
-      };
-    }
-  }
-
-  if (!estado.premios.balonOro) {
-    return { mensaje: "Captura el Balón de oro antes de guardar.", selector: "#balonOro" };
-  }
-
-  if (!estado.premios.botaOro) {
-    return { mensaje: "Captura la Bota de oro antes de guardar.", selector: "#botaOro" };
-  }
-
-  if (!estado.premios.guanteOro) {
-    return { mensaje: "Captura el Guante de oro antes de guardar.", selector: "#guanteOro" };
-  }
-
-  return null;
+function describirSeleccionFecha(seleccion) {
+  if (seleccion.tipo === "hoy") return "Partidos de hoy";
+  if (seleccion.tipo === "proxima") return `Próximos partidos: ${formatearFechaClave(seleccion.fecha)}`;
+  if (seleccion.tipo === "ultima") return `Últimos partidos disponibles: ${formatearFechaClave(seleccion.fecha)}`;
+  return "Partidos";
 }
 
-async function guardarPredicciones() {
+function renderizarPartido(partido) {
+  const marcadorLocal = valorMarcador(partido.realLocal);
+  const marcadorVisitante = valorMarcador(partido.realVisitante);
+  const tieneResultado = marcadorLocal !== null && marcadorVisitante !== null;
+  const centro = tieneResultado ? `${marcadorLocal} - ${marcadorVisitante}` : "VS";
+
+  return `
+    <article class="partido partido-publico">
+      <div class="partido-header">
+        <span class="match-id">Partido ${escaparHtml(partido.numero)}</span>
+        <span class="grupo">${escaparHtml(partido.grupo ? `Grupo ${partido.grupo}` : partido.etapa)}</span>
+      </div>
+
+      <div class="fecha">
+        <strong>${escaparHtml(partido.fecha)}</strong> · ${escaparHtml(partido.hora)} hrs · Hora local del estadio
+      </div>
+
+      <div class="equipos equipos-publicos">
+        <div class="equipo-local">${renderizarEquipoConBandera(partido.local, "local")}</div>
+        <div class="vs ${tieneResultado ? "marcador-real" : ""}">${escaparHtml(centro)}</div>
+        <div>${renderizarEquipoConBandera(partido.visitante)}</div>
+      </div>
+
+      <div class="partido-header">
+        <div class="sede">${escaparHtml(partido.estadio)}<br>${escaparHtml(partido.ciudad)}</div>
+      </div>
+    </article>
+  `;
+}
+
+async function cargarPartidos() {
+  if (!contenedorPartidos) return;
+
+  const data = await apiJson("/api/matches");
+  partidos = data.map(mapearPartido);
+  const seleccion = seleccionarPartidosPorFecha(partidos);
+
+  fechaPartidosTitulo.textContent = describirSeleccionFecha(seleccion);
+  fechaPartidosDetalle.textContent = seleccion.fecha
+    ? `${formatearFechaClave(seleccion.fecha)} · ${seleccion.partidos.length} partido${seleccion.partidos.length === 1 ? "" : "s"}`
+    : "Sin partidos programados.";
+  contadorVista.textContent = `${seleccion.partidos.length} de ${partidos.length} partidos`;
+
+  if (seleccion.partidos.length === 0) {
+    contenedorPartidos.innerHTML = `<div class="placeholder" style="grid-column: 1 / -1;">No hay partidos disponibles para mostrar.</div>`;
+    return;
+  }
+
+  contenedorPartidos.innerHTML = seleccion.partidos.map(renderizarPartido).join("");
+}
+
+function renderizarTopRanking(ranking) {
+  if (!topRankingTabla) return;
+
+  const topTres = ranking.slice(0, 3);
+  topRankingEstado.textContent = ranking.length > 0 ? "Ranking general" : "Sin datos";
+
+  if (topTres.length === 0) {
+    topRankingTabla.innerHTML = `<tr><td colspan="3" class="ranking-empty">Todavía no hay ranking disponible.</td></tr>`;
+    return;
+  }
+
+  topRankingTabla.innerHTML = topTres.map(participanteRanking => {
+    const medalla = obtenerMedallaRanking(participanteRanking.position);
+
+    return `
+    <tr>
+      <td>
+        <span class="ranking-medal-wrap">
+          ${medalla ? `<img class="ranking-medal" src="${medalla.src}" alt="${medalla.alt}">` : ""}
+          <span>${escaparHtml(participanteRanking.position)}</span>
+        </span>
+      </td>
+      <td>${escaparHtml(participanteRanking.name)}</td>
+      <td>${escaparHtml(participanteRanking.points)}</td>
+    </tr>
+  `;
+  }).join("");
+}
+
+function obtenerMedallaRanking(posicion) {
+  const medallas = {
+    1: { src: "assets/medal-gold.svg", alt: "Medalla de oro" },
+    2: { src: "assets/medal-silver.svg", alt: "Medalla de plata" },
+    3: { src: "assets/medal-bronze.svg", alt: "Medalla de bronce" }
+  };
+
+  return medallas[Number(posicion)] || null;
+}
+
+async function cargarTopRanking() {
+  if (!topRankingTabla) return;
+
   try {
-    mostrarEstadoGuardado("Guardando predicciones...");
-    const boton = $("#btnGuardarPredicciones");
-    boton.disabled = true;
-
-    sincronizarPremiosDesdeInputs();
-    const validacion = validarPrediccionesCompletas();
-    if (validacion) {
-      mostrarEstadoGuardado(validacion.mensaje, "error");
-      enfocarCampoValidacion(validacion.selector);
-      alert(validacion.mensaje);
-      return;
-    }
-
-    const participantId = await asegurarParticipante(false);
-    if (!participantId) return;
-
-    const grupos = obtenerPronosticosGrupoCompletos();
-    const eliminatoriasGuardables = obtenerPronosticosEliminatoriaCompletos();
-    const crucesEliminatoria = obtenerCrucesEliminatoriasGenerados();
-
-    await Promise.all(grupos.map(({ partido, pronostico }) => apiJson(`/api/participants/${participantId}/predictions/${partido.id}`, {
-      method: "PUT",
-      body: JSON.stringify({
-        homeScore: valorNumero(pronostico.predLocal),
-        awayScore: valorNumero(pronostico.predVisitante)
-      })
-    })));
-
-    await Promise.all(eliminatoriasGuardables.map(({ llave, marcador }) => apiJson(`/api/participants/${participantId}/knockout-predictions/${llave}`, {
-      method: "PUT",
-      body: JSON.stringify({
-        homeScore: valorNumero(marcador.local),
-        awayScore: valorNumero(marcador.visitante)
-      })
-    })));
-
-    await apiJson(`/api/participants/${participantId}/knockout-brackets`, {
-      method: "PUT",
-      body: JSON.stringify({ brackets: crucesEliminatoria })
-    });
-
-    await apiJson(`/api/participants/${participantId}/award-predictions`, {
-      method: "PUT",
-      body: JSON.stringify({
-        ballonDOr: estado.premios.balonOro,
-        goldenBoot: estado.premios.botaOro,
-        goldenGlove: estado.premios.guanteOro
-      })
-    });
-
-    mostrarEstadoGuardado(`Guardado: ${grupos.length} pronósticos de grupos, ${crucesEliminatoria.length} cruces, ${eliminatoriasGuardables.length} marcadores de eliminatoria y premios individuales.`, "ok");
+    topRankingEstado.textContent = "Cargando ranking...";
+    const ranking = await apiJson("/api/ranking");
+    renderizarTopRanking(ranking);
   } catch (error) {
-    mostrarEstadoGuardado(`No se pudo guardar. ${error.message}`, "error");
-  } finally {
-    $("#btnGuardarPredicciones").disabled = false;
+    topRankingEstado.textContent = "No se pudo cargar el ranking";
+    topRankingTabla.innerHTML = `<tr><td colspan="3" class="ranking-empty">No se pudo cargar el Top 3. ${escaparHtml(error.message)}</td></tr>`;
   }
 }
 
-participante.addEventListener("input", () => {
-  estado.participantId = null;
-  estado.pronosticos = {};
-  estado.eliminatorias = {};
-  estado.equiposDieciseisavos = {};
-  estado.eliminatoriasGeneradas = false;
-  estado.premios = { balonOro: "", botaOro: "", guanteOro: "" };
-  actualizarInputsPremios();
-  renderizarPartidos();
-});
-participante.addEventListener("change", async () => {
-  try {
-    await asegurarParticipante();
-    renderizarPartidos();
-  } catch (error) {
-    alert(`No se pudo preparar el participante. ${error.message}`);
+function formatearVotos(votos) {
+  const total = Number(votos) || 0;
+  return `${total} voto${total === 1 ? "" : "s"}`;
+}
+
+function pintarHighlight(nombreElemento, votosElemento, dato, etiquetaSinDatos, mostrarBandera = false) {
+  if (!nombreElemento || !votosElemento) return;
+
+  if (!dato?.name) {
+    nombreElemento.textContent = etiquetaSinDatos;
+    votosElemento.textContent = "Sin votos registrados";
+    return;
   }
-});
-grupoFiltro.addEventListener("change", renderizarPartidos);
-buscar.addEventListener("input", renderizarPartidos);
-$("#btnGenerarFasesFinales").addEventListener("click", generarFasesFinales);
-balonOro.addEventListener("input", sincronizarPremiosDesdeInputs);
-botaOro.addEventListener("input", sincronizarPremiosDesdeInputs);
-guanteOro.addEventListener("input", sincronizarPremiosDesdeInputs);
 
-$("#btnGuardarPredicciones").addEventListener("click", guardarPredicciones);
+  if (mostrarBandera) {
+    nombreElemento.innerHTML = renderizarEquipoConBandera(dato.name, "highlight");
+  } else {
+    nombreElemento.textContent = dato.name;
+  }
+  votosElemento.textContent = formatearVotos(dato.votes);
+}
 
-$("#btnLimpiar").addEventListener("click", () => {
-  if (!confirm("¿Seguro que deseas limpiar los datos de esta ventana?")) return;
-  reiniciarEstadoSesion();
-  participante.value = "";
-  renderizarPartidos();
-});
+async function cargarHighlights() {
+  if (!finalWinnerName && !ballonDOrName) return;
+
+  try {
+    const highlights = await apiJson("/api/highlights");
+    pintarHighlight(finalWinnerName, finalWinnerVotes, highlights.finalWinner, "Sin favorito definido", true);
+    pintarHighlight(ballonDOrName, ballonDOrVotes, highlights.ballonDOr, "Sin favorito definido");
+  } catch (error) {
+    if (finalWinnerName) finalWinnerName.textContent = "No disponible";
+    if (finalWinnerVotes) finalWinnerVotes.textContent = "No se pudieron cargar los votos";
+    if (ballonDOrName) ballonDOrName.textContent = "No disponible";
+    if (ballonDOrVotes) ballonDOrVotes.textContent = "No se pudieron cargar los votos";
+  }
+}
 
 async function iniciar() {
+  cargarTopRanking();
+  cargarHighlights();
+
   try {
     await cargarPartidos();
-    llenarGrupos();
-    renderizarPartidos();
   } catch (error) {
-    contenedor.innerHTML = `<div class="placeholder" style="grid-column: 1 / -1;">No se pudieron cargar los datos desde la API. ${error.message}</div>`;
+    if (fechaPartidosTitulo) fechaPartidosTitulo.textContent = "Partidos";
+    if (fechaPartidosDetalle) fechaPartidosDetalle.textContent = "No se pudieron cargar los partidos.";
+    if (contadorVista) contadorVista.textContent = "";
+    if (contenedorPartidos) {
+      contenedorPartidos.innerHTML = `<div class="placeholder" style="grid-column: 1 / -1;">No se pudieron cargar los partidos desde la API. ${escaparHtml(error.message)}</div>`;
+    }
   }
 }
 

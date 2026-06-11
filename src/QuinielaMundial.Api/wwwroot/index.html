@@ -3,103 +3,67 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quiniela Mundial 2026 - Fase de Grupos</title>
+  <title>Quiniela Mundial 2026 - Consulta</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
     <header class="hero">
         <div class="hero-content">
             <h1>Quiniela Mundial 2026</h1>
-            <p style="font-weight: bold;">Fase de grupos · 72 partidos · Pronósticos por marcador</p>
+            <p style="font-weight: bold;">Partidos del día · Ranking · Predicciones guardadas</p>
         </div>
     </header>
 
     <main class="container">
-        <section class="panel" style="margin-top:10px">
-            <div class="toolbar">
-                <div>
-                    <label for="participante">Participante</label>
-                    <input id="participante" type="text" placeholder="Nombre del participante" />
-                </div>
-
-                <div>
-                    <label for="grupoFiltro">Filtrar por grupo</label>
-                    <select id="grupoFiltro">
-                        <option value="TODOS">Todos los grupos</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="buscar">Buscar equipo, ciudad o estadio</label>
-                    <input id="buscar" type="search" placeholder="Ejemplo: México, Guadalajara, Argentina..." />
-                </div>
+        <section class="panel public-panel" style="margin-top:10px">
+            <div class="acciones acciones-publicas">
+                <button class="btn-secondary" onclick="window.location.href='ranking.html'">Ver resultados</button>
+                <button class="btn-secondary" onclick="window.location.href='predicciones.html'">Ver predicciones</button>
+                <button class="btn-secondary" onclick="window.location.href='instrucciones_quiniela.html'">Instrucciones</button>
             </div>
 
-            <div class="acciones" style="margin-top: 14px;">
-                <button class="btn-primary" id="btnGuardarPredicciones">Guardar predicciones</button>
-                <button class="btn-secondary" onclick="window.open('ranking.html', '_blank', 'noopener')">Ver resultados</button>
-                <button class="btn-secondary" onclick="window.open('predicciones.html', '_blank', 'noopener')">Ver predicciones</button>
-                <button class="btn-secondary" onclick="window.print()">Imprimir</button>
-                <button class="btn-secondary" onclick="window.open('instrucciones_quiniela.html', '_blank', 'noopener')">Instrucciones</button>
-                <button class="btn-danger" id="btnLimpiar">Limpiar</button>
-            </div>
-            <div class="guardar-estado" id="guardarEstado" aria-live="polite"></div>
+            <div class="dashboard-publico">
+                <section class="top-ranking-card">
+                    <div class="section-title">
+                        <h2>Primeros 3 lugares</h2>
+                        <small id="topRankingEstado">Cargando ranking...</small>
+                    </div>
+                    <div class="ranking-table-wrap ranking-compact-wrap">
+                        <table class="ranking-table ranking-compact">
+                            <thead>
+                                <tr>
+                                    <th>Posición</th>
+                                    <th>Participante</th>
+                                    <th>Puntos</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topRankingTabla"></tbody>
+                        </table>
+                    </div>
+                </section>
 
-            <div class="resumen hide">
-                <div class="stat">
-                    <span>Partidos</span>
-                    <strong id="totalPartidos">72</strong>
-                </div>
-                <div class="stat">
-                    <span>Pronosticados</span>
-                    <strong id="pronosticados">0</strong>
-                </div>
-                <div class="stat">
-                    <span>Con resultado</span>
-                    <strong id="conResultado">0</strong>
-                </div>
-                <div class="stat">
-                    <span>Puntos</span>
-                    <strong id="puntosTotales">0</strong>
-                </div>
-            </div>
+                <section class="partidos-dia-card">
+                    <div class="section-title">
+                        <h2 id="fechaPartidosTitulo">Partidos del día</h2>
+                        <small id="contadorVista"></small>
+                    </div>
+                    <p class="fecha-contexto" id="fechaPartidosDetalle"></p>
+                    <div class="partidos" id="partidos"></div>
+                </section>
 
-            <div class="section-title">
-                <h2>Partidos de fase de grupos</h2>
-                <small id="contadorVista"></small>
-            </div>
+                <section class="votaciones-destacadas" aria-label="Votaciones destacadas">
+                    <article class="voto-card">
+                        <span class="voto-label">Más votado para ganar la final</span>
+                        <strong id="finalWinnerName">Cargando...</strong>
+                        <small id="finalWinnerVotes">Calculando votos</small>
+                    </article>
 
-            <div class="partidos" id="partidos"></div>
-
-            <div class="generar-finales">
-                <button class="btn-primary" id="btnGenerarFasesFinales">Generar fases finales</button>
-            </div>
-
-            <div class="section-title">
-                <h2>Llaves de eliminación directa</h2>
-                <small id="estadoEliminatorias"></small>
-            </div>
-
-            <div class="eliminatorias" id="eliminatorias"></div>
-
-            <div class="section-title">
-                <h2>Premios individuales</h2>
-                <small>Pronóstico final</small>
-            </div>
-
-            <div class="premios-grid">
-                <div>
-                    <label for="balonOro">Balón de oro</label>
-                    <input id="balonOro" type="text" maxlength="160" placeholder="Jugador" />
-                </div>
-                <div>
-                    <label for="botaOro">Bota de oro</label>
-                    <input id="botaOro" type="text" maxlength="160" placeholder="Jugador" />
-                </div>
-                <div>
-                    <label for="guanteOro">Guante de oro</label>
-                    <input id="guanteOro" type="text" maxlength="160" placeholder="Portero" />
-                </div>
+                    <article class="voto-card">
+                        <span class="voto-label">Balón de oro más votado</span>
+                        <strong id="ballonDOrName">Cargando...</strong>
+                        <small id="ballonDOrVotes">Calculando votos</small>
+                    </article>
+                </section>
             </div>
         </section>
     </main>
