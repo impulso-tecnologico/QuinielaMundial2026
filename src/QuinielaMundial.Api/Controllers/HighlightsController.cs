@@ -49,6 +49,62 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
             ORDER BY COUNT(1) DESC, LTRIM(RTRIM(BallonDOr)) ASC;
             """;
 
+        const string predictedGoalsSql = """
+            WITH GoalPredictions AS
+            (
+                SELECT ParticipantId, HomeScore + AwayScore AS Goals
+                FROM dbo.Predictions
+                WHERE HomeScore IS NOT NULL
+                  AND AwayScore IS NOT NULL
+
+                UNION ALL
+
+                SELECT ParticipantId, HomeScore + AwayScore AS Goals
+                FROM dbo.KnockoutPredictions
+                WHERE HomeScore IS NOT NULL
+                  AND AwayScore IS NOT NULL
+            ), Totals AS
+            (
+                SELECT
+                    p.Name,
+                    SUM(g.Goals) AS Goals,
+                    COUNT(1) AS PredictionsCount
+                FROM GoalPredictions g
+                INNER JOIN dbo.Participants p ON p.Id = g.ParticipantId
+                GROUP BY p.Id, p.Name
+            )
+            SELECT TOP (1) Name, Goals
+            FROM Totals
+            ORDER BY Goals DESC, PredictionsCount DESC, Name ASC;
+
+            WITH GoalPredictions AS
+            (
+                SELECT ParticipantId, HomeScore + AwayScore AS Goals
+                FROM dbo.Predictions
+                WHERE HomeScore IS NOT NULL
+                  AND AwayScore IS NOT NULL
+
+                UNION ALL
+
+                SELECT ParticipantId, HomeScore + AwayScore AS Goals
+                FROM dbo.KnockoutPredictions
+                WHERE HomeScore IS NOT NULL
+                  AND AwayScore IS NOT NULL
+            ), Totals AS
+            (
+                SELECT
+                    p.Name,
+                    SUM(g.Goals) AS Goals,
+                    COUNT(1) AS PredictionsCount
+                FROM GoalPredictions g
+                INNER JOIN dbo.Participants p ON p.Id = g.ParticipantId
+                GROUP BY p.Id, p.Name
+            )
+            SELECT TOP (1) Name, Goals
+            FROM Totals
+            ORDER BY Goals ASC, PredictionsCount DESC, Name ASC;
+            """;
+
         using var connection = connectionFactory.CreateConnection();
         var finalWinner = await connection.QueryFirstOrDefaultAsync<HighlightVoteResponse>(new CommandDefinition(
             finalWinnerSql,
@@ -57,10 +113,22 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
             ballonDOrSql,
             cancellationToken: cancellationToken));
 
+        HighlightGoalsResponse? mostPredictedGoals;
+        HighlightGoalsResponse? fewestPredictedGoals;
+        using (var goalsGrid = await connection.QueryMultipleAsync(new CommandDefinition(
+            predictedGoalsSql,
+            cancellationToken: cancellationToken)))
+        {
+            mostPredictedGoals = await goalsGrid.ReadFirstOrDefaultAsync<HighlightGoalsResponse>();
+            fewestPredictedGoals = await goalsGrid.ReadFirstOrDefaultAsync<HighlightGoalsResponse>();
+        }
+
         return Ok(new PublicHighlightsResponse
         {
             FinalWinner = finalWinner,
-            BallonDOr = ballonDOr
+            BallonDOr = ballonDOr,
+            MostPredictedGoals = mostPredictedGoals,
+            FewestPredictedGoals = fewestPredictedGoals
         });
     }
 }

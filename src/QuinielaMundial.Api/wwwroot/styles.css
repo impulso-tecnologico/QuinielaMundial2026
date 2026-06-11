@@ -357,20 +357,20 @@ button:hover {
   overflow-x: visible;
 }
 
-.ranking-compact {
+.ranking-table.ranking-compact {
   min-width: 0;
   table-layout: fixed;
 }
 
-.ranking-compact th,
-.ranking-compact td {
+.ranking-table.ranking-compact th,
+.ranking-table.ranking-compact td {
   width: 33.333%;
   text-align: center;
   overflow-wrap: anywhere;
 }
 
-.ranking-compact th,
-.ranking-compact td {
+.ranking-table.ranking-compact th,
+.ranking-table.ranking-compact td {
   padding: 10px 12px;
 }
 
@@ -908,6 +908,55 @@ button:hover {
   font-weight: 700;
 }
 
+.admin-resultados-filtros,
+.predicciones-filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  align-items: end;
+  margin-top: 16px;
+}
+
+.filtro-estado {
+  align-self: center;
+}
+
+.admin-resultados-lista {
+  display: grid;
+  gap: 12px;
+}
+
+.resultado-card {
+  background: var(--card);
+  border: 1px solid var(--borde);
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.resultado-captura {
+  display: grid;
+  grid-template-columns: 1fr 82px 28px 82px 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.resultado-captura input {
+  text-align: center;
+  font-weight: 900;
+}
+
+.resultado-equipo-local {
+  text-align: right;
+  font-weight: 900;
+}
+
+.resultado-equipo-visitante {
+  font-weight: 900;
+}
+
 @media (max-width: 900px) {
       .toolbar,
       .resumen,
@@ -935,12 +984,137 @@ button:hover {
 }
 
 @media (max-width: 560px) {
+  .hero {
+    padding: 26px 14px;
+  }
+
+  .hero h1 {
+    font-size: 28px;
+  }
+
+  .container {
+    padding: 14px 10px 38px;
+  }
+
+  .panel {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .acciones-publicas button,
+  .acciones button {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .section-title {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+    margin: 18px 2px 10px;
+  }
+
+  .section-title h2 {
+    font-size: 19px;
+  }
+
+  .top-ranking-card,
+  .partidos-dia-card,
+  .voto-card {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .ranking-compact-wrap {
+    overflow-x: visible;
+  }
+
+  .ranking-table.ranking-compact {
+    min-width: 0;
+    font-size: 12px;
+  }
+
+  .ranking-table.ranking-compact th,
+  .ranking-table.ranking-compact td {
+    padding: 8px 5px;
+  }
+
+  .ranking-medal-wrap {
+    gap: 4px;
+  }
+
+  .ranking-medal {
+    width: 28px;
+    height: 28px;
+  }
+
+  .voto-card {
+    min-height: auto;
+  }
+
+  .voto-card strong {
+    font-size: 23px;
+  }
+
+  .voto-card .flag-equipo {
+    width: 38px;
+    height: 28px;
+  }
+
   .partido {
     padding: 13px;
   }
 
   .equipos {
     font-size: 15px;
+  }
+
+  .equipos-publicos {
+    grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr);
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .equipo-con-bandera {
+    gap: 5px;
+  }
+
+  .flag-equipo {
+    width: 24px;
+    height: 18px;
+    border-radius: 3px;
+  }
+
+  .vs {
+    padding: 5px 6px;
+    font-size: 11px;
+  }
+
+  .porcentajes-pronosticos {
+    grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr);
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .porcentaje-empate {
+    min-width: 56px;
+  }
+
+  .porcentaje-opcion span,
+  .porcentajes-pronosticos small {
+    font-size: 10px;
+  }
+
+  .porcentaje-opcion strong {
+    font-size: 16px;
+  }
+
+  .resultado-captura {
+    grid-template-columns: 1fr 64px 20px 64px 1fr;
+  }
+
+  .resultado-captura button {
+    grid-column: 1 / -1;
   }
 
   .pronostico {

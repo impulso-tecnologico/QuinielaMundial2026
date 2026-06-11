@@ -11,6 +11,10 @@ const finalWinnerName = $("#finalWinnerName");
 const finalWinnerVotes = $("#finalWinnerVotes");
 const ballonDOrName = $("#ballonDOrName");
 const ballonDOrVotes = $("#ballonDOrVotes");
+const mostGoalsName = $("#mostGoalsName");
+const mostGoalsTotal = $("#mostGoalsTotal");
+const fewestGoalsName = $("#fewestGoalsName");
+const fewestGoalsTotal = $("#fewestGoalsTotal");
 
 let partidos = [];
 
@@ -356,6 +360,11 @@ function formatearVotos(votos) {
   return `${total} voto${total === 1 ? "" : "s"}`;
 }
 
+function formatearGoles(goles) {
+  const total = Number(goles) || 0;
+  return `${total} gol${total === 1 ? "" : "es"} pronosticado${total === 1 ? "" : "s"}`;
+}
+
 function pintarHighlight(nombreElemento, votosElemento, dato, etiquetaSinDatos, mostrarBandera = false) {
   if (!nombreElemento || !votosElemento) return;
 
@@ -373,18 +382,37 @@ function pintarHighlight(nombreElemento, votosElemento, dato, etiquetaSinDatos, 
   votosElemento.textContent = formatearVotos(dato.votes);
 }
 
+function pintarGoalsHighlight(nombreElemento, golesElemento, dato, etiquetaSinDatos) {
+  if (!nombreElemento || !golesElemento) return;
+
+  if (!dato?.name) {
+    nombreElemento.textContent = etiquetaSinDatos;
+    golesElemento.textContent = "Sin pronósticos registrados";
+    return;
+  }
+
+  nombreElemento.textContent = dato.name;
+  golesElemento.textContent = formatearGoles(dato.goals);
+}
+
 async function cargarHighlights() {
-  if (!finalWinnerName && !ballonDOrName) return;
+  if (!finalWinnerName && !ballonDOrName && !mostGoalsName && !fewestGoalsName) return;
 
   try {
     const highlights = await apiJson("/api/highlights");
     pintarHighlight(finalWinnerName, finalWinnerVotes, highlights.finalWinner, "Sin favorito definido", true);
     pintarHighlight(ballonDOrName, ballonDOrVotes, highlights.ballonDOr, "Sin favorito definido");
+    pintarGoalsHighlight(mostGoalsName, mostGoalsTotal, highlights.mostPredictedGoals, "Sin datos");
+    pintarGoalsHighlight(fewestGoalsName, fewestGoalsTotal, highlights.fewestPredictedGoals, "Sin datos");
   } catch (error) {
     if (finalWinnerName) finalWinnerName.textContent = "No disponible";
     if (finalWinnerVotes) finalWinnerVotes.textContent = "No se pudieron cargar los votos";
     if (ballonDOrName) ballonDOrName.textContent = "No disponible";
     if (ballonDOrVotes) ballonDOrVotes.textContent = "No se pudieron cargar los votos";
+    if (mostGoalsName) mostGoalsName.textContent = "No disponible";
+    if (mostGoalsTotal) mostGoalsTotal.textContent = "No se pudieron cargar los goles";
+    if (fewestGoalsName) fewestGoalsName.textContent = "No disponible";
+    if (fewestGoalsTotal) fewestGoalsTotal.textContent = "No se pudieron cargar los goles";
   }
 }
 

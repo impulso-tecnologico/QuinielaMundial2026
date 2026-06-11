@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administrar resultados - Quiniela Mundial 2026</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-content">
+      <h1>Administrar resultados</h1>
+      <p style="font-weight: bold;">Captura interna de marcadores reales</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel" style="margin-top:10px">
+      <div class="acciones" style="margin-top: 0;">
+        <button class="btn-secondary" onclick="window.location.href='index.html'">Volver al inicio</button>
+        <button class="btn-primary" id="btnActualizarResultados">Actualizar partidos</button>
+      </div>
+
+      <div class="admin-resultados-filtros">
+        <div>
+          <label for="registradorResultado">Registrado por</label>
+          <select id="registradorResultado"></select>
+        </div>
+        <div>
+          <label for="adminGrupoFiltro">Grupo o etapa</label>
+          <select id="adminGrupoFiltro">
+            <option value="TODOS">Todos los partidos</option>
+          </select>
+        </div>
+        <div>
+          <label for="adminBuscar">Buscar equipo, ciudad o estadio</label>
+          <input id="adminBuscar" type="search" placeholder="México, Azteca, Argentina..." />
+        </div>
+        <div class="filtro-estado">
+          <label>Estado</label>
+          <div class="guardar-estado" id="adminResultadosEstado" aria-live="polite" style="text-align:left;margin-top:0;">Cargando partidos...</div>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <h2>Partidos</h2>
+        <small id="adminResultadosContador"></small>
+      </div>
+
+      <section class="admin-resultados-lista" id="adminResultadosListado"></section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© 2026 Impulso Tecnológico. Todos los derechos reservados.</p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="admin-resultados.js"></script>
+</body>
+</html>
