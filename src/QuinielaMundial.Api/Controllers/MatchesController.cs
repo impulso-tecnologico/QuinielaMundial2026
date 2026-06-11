@@ -9,6 +9,44 @@ namespace QuinielaMundial.Api.Controllers;
 [Route("api/matches")]
 public sealed class MatchesController(ISqlConnectionFactory connectionFactory) : ControllerBase
 {
+    [HttpGet("prediction-percentages")]
+    public async Task<ActionResult<IReadOnlyList<MatchPredictionPercentagesResponse>>> GetPredictionPercentages(CancellationToken cancellationToken)
+    {
+        const string sql = """
+            WITH Totals AS
+            (
+                SELECT
+                    MatchId,
+                    COUNT(1) AS TotalPredictions,
+                    SUM(CASE WHEN HomeScore > AwayScore THEN 1 ELSE 0 END) AS HomeWinPredictions,
+                    SUM(CASE WHEN HomeScore = AwayScore THEN 1 ELSE 0 END) AS DrawPredictions,
+                    SUM(CASE WHEN AwayScore > HomeScore THEN 1 ELSE 0 END) AS AwayWinPredictions
+                FROM dbo.Predictions
+                WHERE HomeScore IS NOT NULL
+                  AND AwayScore IS NOT NULL
+                GROUP BY MatchId
+            )
+            SELECT
+                MatchId,
+                TotalPredictions,
+                HomeWinPredictions,
+                DrawPredictions,
+                AwayWinPredictions,
+                CAST(ROUND(100.0 * HomeWinPredictions / NULLIF(TotalPredictions, 0), 0) AS INT) AS HomeWinPercentage,
+                CAST(ROUND(100.0 * DrawPredictions / NULLIF(TotalPredictions, 0), 0) AS INT) AS DrawPercentage,
+                CAST(ROUND(100.0 * AwayWinPredictions / NULLIF(TotalPredictions, 0), 0) AS INT) AS AwayWinPercentage
+            FROM Totals
+            ORDER BY MatchId;
+            """;
+
+        using var connection = connectionFactory.CreateConnection();
+        var percentages = await connection.QueryAsync<MatchPredictionPercentagesResponse>(new CommandDefinition(
+            sql,
+            cancellationToken: cancellationToken));
+
+        return Ok(percentages.ToList());
+    }
+
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<MatchResponse>>> GetAll([FromQuery] string? group, CancellationToken cancellationToken)
     {

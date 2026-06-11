@@ -164,7 +164,11 @@ function valorMarcador(valor) {
   return Number.isInteger(numero) && numero >= 0 ? numero : null;
 }
 
-function mapearPartido(apiMatch) {
+function crearMapaPorcentajesPronosticos(porcentajes) {
+  return new Map((porcentajes || []).map(item => [item.matchId, item]));
+}
+
+function mapearPartido(apiMatch, porcentajesPorPartido = new Map()) {
   const fechaClave = obtenerClaveFechaPartido(apiMatch.matchDate);
 
   return {
@@ -180,7 +184,8 @@ function mapearPartido(apiMatch) {
     estadio: apiMatch.stadium || "Sede por definir",
     ciudad: apiMatch.city || "Ciudad por definir",
     realLocal: apiMatch.homeScore,
-    realVisitante: apiMatch.awayScore
+    realVisitante: apiMatch.awayScore,
+    porcentajesPronosticos: porcentajesPorPartido.get(apiMatch.id) || null
   };
 }
 
@@ -235,6 +240,8 @@ function renderizarPartido(partido) {
         <div>${renderizarEquipoConBandera(partido.visitante)}</div>
       </div>
 
+      ${renderizarPorcentajesPronosticos(partido)}
+
       <div class="partido-header">
         <div class="sede">${escaparHtml(partido.estadio)}<br>${escaparHtml(partido.ciudad)}</div>
       </div>
@@ -242,11 +249,40 @@ function renderizarPartido(partido) {
   `;
 }
 
+function renderizarPorcentajesPronosticos(partido) {
+  const porcentajes = partido.porcentajesPronosticos;
+  if (!porcentajes?.totalPredictions) {
+    return `<div class="porcentajes-pronosticos sin-pronosticos">Sin pronósticos registrados</div>`;
+  }
+
+  return `
+    <div class="porcentajes-pronosticos" aria-label="Porcentajes de pronósticos">
+      <div class="porcentaje-opcion porcentaje-local">
+        <span>Gana ${escaparHtml(partido.local)}</span>
+        <strong>${escaparHtml(porcentajes.homeWinPercentage)}%</strong>
+      </div>
+      <div class="porcentaje-opcion porcentaje-empate">
+        <span>Empate</span>
+        <strong>${escaparHtml(porcentajes.drawPercentage)}%</strong>
+      </div>
+      <div class="porcentaje-opcion">
+        <span>Gana ${escaparHtml(partido.visitante)}</span>
+        <strong>${escaparHtml(porcentajes.awayWinPercentage)}%</strong>
+      </div>
+      <small>${escaparHtml(porcentajes.totalPredictions)} pronóstico${porcentajes.totalPredictions === 1 ? "" : "s"}</small>
+    </div>
+  `;
+}
+
 async function cargarPartidos() {
   if (!contenedorPartidos) return;
 
-  const data = await apiJson("/api/matches");
-  partidos = data.map(mapearPartido);
+  const [data, porcentajes] = await Promise.all([
+    apiJson("/api/matches"),
+    apiJson("/api/matches/prediction-percentages")
+  ]);
+  const porcentajesPorPartido = crearMapaPorcentajesPronosticos(porcentajes);
+  partidos = data.map(partido => mapearPartido(partido, porcentajesPorPartido));
   const seleccion = seleccionarPartidosPorFecha(partidos);
 
   fechaPartidosTitulo.textContent = describirSeleccionFecha(seleccion);
