@@ -13,11 +13,20 @@ public sealed class RankingController(ISqlConnectionFactory connectionFactory) :
     public async Task<ActionResult<IReadOnlyList<RankingParticipantResponse>>> Get(CancellationToken cancellationToken)
     {
         const string sql = """
-            WITH ScoredPredictions AS
+            WITH LatestScoredMatch AS
+            (
+                SELECT TOP (1)
+                    Id AS MatchId
+                FROM dbo.Matches
+                WHERE HomeScore IS NOT NULL
+                  AND AwayScore IS NOT NULL
+                ORDER BY ResultRegisteredAtUtc DESC, MatchDate DESC, MatchTime DESC, MatchNumber DESC
+            ), ScoredPredictions AS
             (
                 SELECT
                     pa.Id AS ParticipantId,
                     pa.Name,
+                    m.Id AS MatchId,
                     CASE
                         WHEN p.Id IS NULL OR p.HomeScore IS NULL OR p.AwayScore IS NULL OR m.HomeScore IS NULL OR m.AwayScore IS NULL THEN 0
                         ELSE
@@ -53,17 +62,59 @@ public sealed class RankingController(ISqlConnectionFactory connectionFactory) :
                     SUM(PredictionScored) AS PredictionsScored
                 FROM ScoredPredictions
                 GROUP BY ParticipantId, Name
+            ), LatestMatchScores AS
+            (
+                SELECT
+                    ParticipantId,
+                    SUM(Points) AS Points,
+                    SUM(ExactScore) AS ExactScores,
+                    SUM(CorrectResult) AS CorrectResults,
+                    SUM(PredictionScored) AS PredictionsScored
+                FROM ScoredPredictions
+                WHERE MatchId = (SELECT MatchId FROM LatestScoredMatch)
+                GROUP BY ParticipantId
+            ), PreviousTotals AS
+            (
+                SELECT
+                    t.ParticipantId,
+                    t.Name,
+                    t.Points - COALESCE(l.Points, 0) AS Points,
+                    t.ExactScores - COALESCE(l.ExactScores, 0) AS ExactScores,
+                    t.CorrectResults - COALESCE(l.CorrectResults, 0) AS CorrectResults,
+                    t.PredictionsScored - COALESCE(l.PredictionsScored, 0) AS PredictionsScored
+                FROM Totals t
+                LEFT JOIN LatestMatchScores l ON l.ParticipantId = t.ParticipantId
+            ), CurrentRank AS
+            (
+                SELECT
+                    CAST(DENSE_RANK() OVER (ORDER BY Points DESC) AS INT) AS Position,
+                    ParticipantId,
+                    Name,
+                    Points,
+                    ExactScores,
+                    CorrectResults,
+                    PredictionsScored
+                FROM Totals
+            ), PreviousRank AS
+            (
+                SELECT
+                    CAST(DENSE_RANK() OVER (ORDER BY Points DESC) AS INT) AS PreviousPosition,
+                    ParticipantId
+                FROM PreviousTotals
             )
             SELECT
-                ROW_NUMBER() OVER (ORDER BY Points DESC, ExactScores DESC, CorrectResults DESC, Name ASC) AS Position,
-                ParticipantId,
-                Name,
-                Points,
-                ExactScores,
-                CorrectResults,
-                PredictionsScored
-            FROM Totals
-            ORDER BY Position;
+                c.Position,
+                c.ParticipantId,
+                c.Name,
+                c.Points,
+                c.ExactScores,
+                c.CorrectResults,
+                c.PredictionsScored,
+                COALESCE(p.PreviousPosition, c.Position) AS PreviousPosition,
+                CAST(COALESCE(p.PreviousPosition, c.Position) - c.Position AS INT) AS PositionChange
+            FROM CurrentRank c
+            LEFT JOIN PreviousRank p ON p.ParticipantId = c.ParticipantId
+            ORDER BY c.Position, c.ExactScores DESC, c.CorrectResults DESC, c.Name;
             """;
 
         using var connection = connectionFactory.CreateConnection();

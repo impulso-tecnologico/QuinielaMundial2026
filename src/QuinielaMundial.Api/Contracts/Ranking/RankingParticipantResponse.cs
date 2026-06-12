@@ -9,4 +9,6 @@ public sealed class RankingParticipantResponse
     public int ExactScores { get; set; }
     public int CorrectResults { get; set; }
     public int PredictionsScored { get; set; }
+    public int PreviousPosition { get; set; }
+    public int PositionChange { get; set; }
 }

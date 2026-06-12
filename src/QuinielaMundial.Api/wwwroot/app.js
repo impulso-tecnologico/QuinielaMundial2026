@@ -18,6 +18,27 @@ const fewestGoalsTotal = $("#fewestGoalsTotal");
 
 let partidos = [];
 
+const ZONA_HORARIA_GUADALAJARA = "America/Mexico_City";
+
+const ZONAS_HORARIAS_SEDES = {
+  "atlanta": "America/New_York",
+  "boston": "America/New_York",
+  "ciudad de mexico": "America/Mexico_City",
+  "dallas": "America/Chicago",
+  "filadelfia": "America/New_York",
+  "guadalajara": "America/Mexico_City",
+  "houston": "America/Chicago",
+  "kansas city": "America/Chicago",
+  "los angeles": "America/Los_Angeles",
+  "miami": "America/New_York",
+  "monterrey": "America/Mexico_City",
+  "nueva york/nueva jersey": "America/New_York",
+  "san francisco bay area": "America/Los_Angeles",
+  "seattle": "America/Los_Angeles",
+  "toronto": "America/New_York",
+  "vancouver": "America/Los_Angeles"
+};
+
 const CODIGOS_BANDERA_EQUIPOS = {
   "alemania": "de",
   "arabia saudita": "sa",
@@ -162,6 +183,76 @@ function formatearHora(valor) {
   return String(valor || "").slice(0, 5);
 }
 
+function obtenerZonaHorariaSede(ciudad) {
+  return ZONAS_HORARIAS_SEDES[normalizarNombreEquipo(ciudad)] || ZONA_HORARIA_GUADALAJARA;
+}
+
+function obtenerPartesEnZonaHoraria(fecha, zonaHoraria) {
+  const formato = new Intl.DateTimeFormat("en-US", {
+    timeZone: zonaHoraria,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23"
+  });
+
+  return Object.fromEntries(formato.formatToParts(fecha).map(parte => [parte.type, parte.value]));
+}
+
+function obtenerOffsetZonaHoraria(fecha, zonaHoraria) {
+  const partes = obtenerPartesEnZonaHoraria(fecha, zonaHoraria);
+  const fechaComoUtc = Date.UTC(
+    Number(partes.year),
+    Number(partes.month) - 1,
+    Number(partes.day),
+    Number(partes.hour),
+    Number(partes.minute),
+    Number(partes.second)
+  );
+
+  return fechaComoUtc - fecha.getTime();
+}
+
+function crearFechaUtcDesdeHoraLocal(fechaClave, hora, zonaHoraria) {
+  const fechaMatch = String(fechaClave || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const horaMatch = String(hora || "").match(/^(\d{2}):(\d{2})(?::(\d{2}))?/);
+
+  if (!fechaMatch || !horaMatch) return null;
+
+  const fechaComoUtc = Date.UTC(
+    Number(fechaMatch[1]),
+    Number(fechaMatch[2]) - 1,
+    Number(fechaMatch[3]),
+    Number(horaMatch[1]),
+    Number(horaMatch[2]),
+    Number(horaMatch[3] || 0)
+  );
+
+  const aproximada = new Date(fechaComoUtc);
+  const offset = obtenerOffsetZonaHoraria(aproximada, zonaHoraria);
+  const corregida = new Date(fechaComoUtc - offset);
+  const offsetCorregido = obtenerOffsetZonaHoraria(corregida, zonaHoraria);
+
+  return new Date(fechaComoUtc - offsetCorregido);
+}
+
+function formatearHoraGuadalajara(fechaClave, hora, ciudad) {
+  const zonaSede = obtenerZonaHorariaSede(ciudad);
+  const fechaUtc = crearFechaUtcDesdeHoraLocal(fechaClave, hora, zonaSede);
+
+  if (!fechaUtc) return formatearHora(hora);
+
+  return new Intl.DateTimeFormat("es-MX", {
+    timeZone: ZONA_HORARIA_GUADALAJARA,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  }).format(fechaUtc);
+}
+
 function valorMarcador(valor) {
   if (valor === null || valor === undefined || valor === "") return null;
   const numero = Number(valor);
@@ -180,7 +271,7 @@ function mapearPartido(apiMatch, porcentajesPorPartido = new Map()) {
     numero: apiMatch.matchNumber,
     fechaClave,
     fecha: formatearFechaClave(fechaClave),
-    hora: formatearHora(apiMatch.matchTime),
+    hora: formatearHoraGuadalajara(fechaClave, apiMatch.matchTime, apiMatch.city),
     grupo: apiMatch.group || "",
     etapa: apiMatch.stageName || "",
     local: apiMatch.homeTeam || "Por definir",
@@ -235,7 +326,7 @@ function renderizarPartido(partido) {
       </div>
 
       <div class="fecha">
-        <strong>${escaparHtml(partido.fecha)}</strong> · ${escaparHtml(partido.hora)} hrs · Hora local del estadio
+        <strong>${escaparHtml(partido.fecha)}</strong> · ${escaparHtml(partido.hora)} hrs · Hora de Guadalajara, México
       </div>
 
       <div class="equipos equipos-publicos">
