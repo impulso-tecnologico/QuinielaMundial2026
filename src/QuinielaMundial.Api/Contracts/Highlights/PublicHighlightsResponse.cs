@@ -6,4 +6,5 @@ public sealed class PublicHighlightsResponse
     public HighlightVoteResponse? BallonDOr { get; set; }
     public HighlightGoalsResponse? MostPredictedGoals { get; set; }
     public HighlightGoalsResponse? FewestPredictedGoals { get; set; }
+    public HighlightStreakResponse? LongestCorrectStreak { get; set; }
 }

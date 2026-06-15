@@ -105,6 +105,66 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
             ORDER BY Goals ASC, PredictionsCount DESC, Name ASC;
             """;
 
+        const string longestCorrectStreakSql = """
+            WITH EvaluatedPredictions AS
+            (
+                SELECT
+                    pa.Id AS ParticipantId,
+                    pa.Name,
+                    m.MatchNumber,
+                    CASE
+                        WHEN p.HomeScore IS NOT NULL
+                             AND p.AwayScore IS NOT NULL
+                             AND SIGN(p.HomeScore - p.AwayScore) = SIGN(m.HomeScore - m.AwayScore) THEN 1
+                        ELSE 0
+                    END AS IsCorrect,
+                    ROW_NUMBER() OVER (PARTITION BY pa.Id ORDER BY m.MatchNumber) AS MatchRow
+                FROM dbo.Participants pa
+                CROSS JOIN dbo.Matches m
+                LEFT JOIN dbo.Predictions p
+                    ON p.ParticipantId = pa.Id
+                   AND p.MatchId = m.Id
+                WHERE m.HomeScore IS NOT NULL
+                  AND m.AwayScore IS NOT NULL
+            ), CorrectRows AS
+            (
+                SELECT
+                    ParticipantId,
+                    Name,
+                    MatchNumber,
+                    MatchRow - ROW_NUMBER() OVER (PARTITION BY ParticipantId ORDER BY MatchNumber) AS StreakGroup
+                FROM EvaluatedPredictions
+                WHERE IsCorrect = 1
+            ), Streaks AS
+            (
+                SELECT
+                    ParticipantId,
+                    Name,
+                    COUNT(1) AS Streak
+                FROM CorrectRows
+                GROUP BY ParticipantId, Name, StreakGroup
+            ), BestStreaks AS
+            (
+                SELECT
+                    ParticipantId,
+                    Name,
+                    MAX(Streak) AS Streak
+                FROM Streaks
+                GROUP BY ParticipantId, Name
+            ), MaxStreak AS
+            (
+                SELECT MAX(Streak) AS Streak
+                FROM BestStreaks
+            )
+            SELECT
+                b.Name,
+                b.Streak
+            FROM BestStreaks b
+            WHERE b.Streak = (SELECT Streak FROM MaxStreak)
+              AND b.Streak > 0
+            ORDER BY b.Name;
+            """;
+
         using var connection = connectionFactory.CreateConnection();
         var finalWinner = await connection.QueryFirstOrDefaultAsync<HighlightVoteResponse>(new CommandDefinition(
             finalWinnerSql,
@@ -123,12 +183,30 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
             fewestPredictedGoals = await goalsGrid.ReadFirstOrDefaultAsync<HighlightGoalsResponse>();
         }
 
+        var longestCorrectStreakRows = (await connection.QueryAsync<HighlightStreakRow>(new CommandDefinition(
+            longestCorrectStreakSql,
+            cancellationToken: cancellationToken))).ToList();
+        var longestCorrectStreak = longestCorrectStreakRows.Count > 0
+            ? new HighlightStreakResponse
+            {
+                Names = longestCorrectStreakRows.Select(row => row.Name).ToList(),
+                Streak = longestCorrectStreakRows[0].Streak
+            }
+            : null;
+
         return Ok(new PublicHighlightsResponse
         {
             FinalWinner = finalWinner,
             BallonDOr = ballonDOr,
             MostPredictedGoals = mostPredictedGoals,
-            FewestPredictedGoals = fewestPredictedGoals
+            FewestPredictedGoals = fewestPredictedGoals,
+            LongestCorrectStreak = longestCorrectStreak
         });
+    }
+
+    private sealed class HighlightStreakRow
+    {
+        public string Name { get; set; } = string.Empty;
+        public int Streak { get; set; }
     }
 }
