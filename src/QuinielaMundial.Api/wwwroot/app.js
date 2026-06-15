@@ -7,6 +7,7 @@ const fechaPartidosTitulo = $("#fechaPartidosTitulo");
 const fechaPartidosDetalle = $("#fechaPartidosDetalle");
 const topRankingTabla = $("#topRankingTabla");
 const topRankingEstado = $("#topRankingEstado");
+const pageLoader = $("#pageLoader");
 const finalWinnerName = $("#finalWinnerName");
 const finalWinnerVotes = $("#finalWinnerVotes");
 const ballonDOrName = $("#ballonDOrName");
@@ -19,6 +20,7 @@ const bestStreakNames = $("#bestStreakNames");
 const bestStreakTotal = $("#bestStreakTotal");
 
 let partidos = [];
+let loaderTimeoutId = null;
 
 const ZONA_HORARIA_GUADALAJARA = "America/Mexico_City";
 
@@ -183,6 +185,24 @@ function formatearFechaClave(clave) {
 
 function formatearHora(valor) {
   return String(valor || "").slice(0, 5);
+}
+
+function mostrarLoader() {
+  if (!pageLoader) return;
+
+  window.clearTimeout(loaderTimeoutId);
+  pageLoader.hidden = false;
+  window.requestAnimationFrame(() => pageLoader.classList.remove("is-hidden"));
+}
+
+function ocultarLoader() {
+  if (!pageLoader) return;
+
+  pageLoader.classList.add("is-hidden");
+  window.clearTimeout(loaderTimeoutId);
+  loaderTimeoutId = window.setTimeout(() => {
+    pageLoader.hidden = true;
+  }, 220);
 }
 
 function obtenerZonaHorariaSede(ciudad) {
@@ -530,10 +550,7 @@ async function cargarHighlights() {
   }
 }
 
-async function iniciar() {
-  cargarTopRanking();
-  cargarHighlights();
-
+async function cargarPartidosConFallback() {
   try {
     await cargarPartidos();
   } catch (error) {
@@ -544,6 +561,18 @@ async function iniciar() {
       contenedorPartidos.innerHTML = `<div class="placeholder" style="grid-column: 1 / -1;">No se pudieron cargar los partidos desde la API. ${escaparHtml(error.message)}</div>`;
     }
   }
+}
+
+async function iniciar() {
+  mostrarLoader();
+
+  await Promise.allSettled([
+    cargarTopRanking(),
+    cargarHighlights(),
+    cargarPartidosConFallback()
+  ]);
+
+  ocultarLoader();
 }
 
 iniciar();

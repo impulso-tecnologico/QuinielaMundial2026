@@ -7,6 +7,15 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+    <div class="page-loader is-hidden" id="pageLoader" role="status" aria-live="polite" aria-label="Cargando contenido" hidden>
+        <div class="page-loader-card">
+            <div class="soccer-loader" aria-hidden="true">
+                <img class="soccer-loader-gif" src="assets/soccer-loader.gif" alt="" />
+            </div>
+            <p>Cargando quiniela...</p>
+        </div>
+    </div>
+
     <header class="hero">
         <div class="hero-content">
             <h1>Quiniela Mundial 2026</h1>
@@ -52,31 +61,31 @@
                 </section>
 
                 <section class="votaciones-destacadas" aria-label="Votaciones destacadas">
-                    <article class="voto-card">
+                    <article class="voto-card voto-card-final">
                         <span class="voto-label">Más votado para ganar la final</span>
                         <strong id="finalWinnerName">Cargando...</strong>
                         <small id="finalWinnerVotes">Calculando votos</small>
                     </article>
 
-                    <article class="voto-card">
+                    <article class="voto-card voto-card-ballon">
                         <span class="voto-label">Balón de oro más votado</span>
                         <strong id="ballonDOrName">Cargando...</strong>
                         <small id="ballonDOrVotes">Calculando votos</small>
                     </article>
 
-                    <article class="voto-card">
+                    <article class="voto-card voto-card-most-goals">
                         <span class="voto-label">Participante con más goles pronosticados</span>
                         <strong id="mostGoalsName">Cargando...</strong>
                         <small id="mostGoalsTotal">Calculando goles</small>
                     </article>
 
-                    <article class="voto-card">
+                    <article class="voto-card voto-card-fewest-goals">
                         <span class="voto-label">Participante con menos goles pronosticados</span>
                         <strong id="fewestGoalsName">Cargando...</strong>
                         <small id="fewestGoalsTotal">Calculando goles</small>
                     </article>
 
-                    <article class="voto-card">
+                    <article class="voto-card voto-card-streak">
                         <span class="voto-label">Mejor racha de partidos acertados</span>
                         <strong id="bestStreakNames">Cargando...</strong>
                         <small id="bestStreakTotal">Calculando racha</small>
