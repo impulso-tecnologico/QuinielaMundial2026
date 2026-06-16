@@ -6,7 +6,16 @@
   <title>Administrar resultados - Quiniela Mundial 2026</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body data-loader-manual="true">
+  <div class="page-loader" id="pageLoader" role="status" aria-live="polite" aria-label="Cargando contenido">
+    <div class="page-loader-card">
+      <div class="soccer-loader" aria-hidden="true">
+        <img class="soccer-loader-gif" src="assets/soccer-loader.gif" alt="" />
+      </div>
+      <p>Cargando quiniela...</p>
+    </div>
+  </div>
+
   <header class="hero">
     <div class="hero-content">
       <h1>Administrar resultados</h1>
@@ -33,6 +42,14 @@
           </select>
         </div>
         <div>
+          <label for="adminResultadoFiltro">Resultado</label>
+          <select id="adminResultadoFiltro">
+            <option value="SIN_RESULTADO" selected>Partidos sin resultado</option>
+            <option value="CON_RESULTADO">Partidos con resultado</option>
+            <option value="TODOS">Todos</option>
+          </select>
+        </div>
+        <div>
           <label for="adminBuscar">Buscar equipo, ciudad o estadio</label>
           <input id="adminBuscar" type="search" placeholder="México, Azteca, Argentina..." />
         </div>
@@ -56,6 +73,7 @@
   </footer>
 
   <script src="config.js"></script>
+  <script src="loader.js"></script>
   <script src="admin-resultados.js"></script>
 </body>
 </html>

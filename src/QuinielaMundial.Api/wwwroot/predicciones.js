@@ -141,6 +141,8 @@ async function cargarDetalleParticipante(participant) {
 }
 
 async function cargarPredicciones() {
+  window.QuinielaLoader?.show();
+
   try {
     prediccionesEstado.textContent = "Cargando predicciones...";
     contadorPredicciones.textContent = "";
@@ -169,6 +171,8 @@ async function cargarPredicciones() {
     prediccionesEstado.textContent = "No se pudieron cargar las predicciones";
     contadorPredicciones.textContent = "";
     prediccionesListado.innerHTML = `<div class="placeholder">${escapeHtml(error.message)}</div>`;
+  } finally {
+    window.QuinielaLoader?.hide();
   }
 }
 

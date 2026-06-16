@@ -7,6 +7,15 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="page-loader" id="pageLoader" role="status" aria-live="polite" aria-label="Cargando contenido">
+    <div class="page-loader-card">
+      <div class="soccer-loader" aria-hidden="true">
+        <img class="soccer-loader-gif" src="assets/soccer-loader.gif" alt="" />
+      </div>
+      <p>Cargando quiniela...</p>
+    </div>
+  </div>
+
   <header class="hero">
     <div class="hero-content">
       <h1>Instrucciones de la quiniela</h1>
@@ -273,5 +282,6 @@
       </ul>
     </section>
   </main>
+  <script src="loader.js"></script>
 </body>
 </html>

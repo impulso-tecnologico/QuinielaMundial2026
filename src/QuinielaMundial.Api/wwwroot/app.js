@@ -7,7 +7,6 @@ const fechaPartidosTitulo = $("#fechaPartidosTitulo");
 const fechaPartidosDetalle = $("#fechaPartidosDetalle");
 const topRankingTabla = $("#topRankingTabla");
 const topRankingEstado = $("#topRankingEstado");
-const pageLoader = $("#pageLoader");
 const finalWinnerName = $("#finalWinnerName");
 const finalWinnerVotes = $("#finalWinnerVotes");
 const ballonDOrName = $("#ballonDOrName");
@@ -20,7 +19,6 @@ const bestStreakNames = $("#bestStreakNames");
 const bestStreakTotal = $("#bestStreakTotal");
 
 let partidos = [];
-let loaderTimeoutId = null;
 
 const ZONA_HORARIA_GUADALAJARA = "America/Mexico_City";
 
@@ -185,24 +183,6 @@ function formatearFechaClave(clave) {
 
 function formatearHora(valor) {
   return String(valor || "").slice(0, 5);
-}
-
-function mostrarLoader() {
-  if (!pageLoader) return;
-
-  window.clearTimeout(loaderTimeoutId);
-  pageLoader.hidden = false;
-  window.requestAnimationFrame(() => pageLoader.classList.remove("is-hidden"));
-}
-
-function ocultarLoader() {
-  if (!pageLoader) return;
-
-  pageLoader.classList.add("is-hidden");
-  window.clearTimeout(loaderTimeoutId);
-  loaderTimeoutId = window.setTimeout(() => {
-    pageLoader.hidden = true;
-  }, 220);
 }
 
 function obtenerZonaHorariaSede(ciudad) {
@@ -564,7 +544,7 @@ async function cargarPartidosConFallback() {
 }
 
 async function iniciar() {
-  mostrarLoader();
+  window.QuinielaLoader?.show();
 
   await Promise.allSettled([
     cargarTopRanking(),
@@ -572,7 +552,7 @@ async function iniciar() {
     cargarPartidosConFallback()
   ]);
 
-  ocultarLoader();
+  window.QuinielaLoader?.hide();
 }
 
 iniciar();

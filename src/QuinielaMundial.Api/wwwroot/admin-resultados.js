@@ -3,6 +3,7 @@ const API_BASE = (window.QUINIELA_CONFIG?.apiBaseUrl || "").replace(/\/$/, "");
 const $ = (selector) => document.querySelector(selector);
 const registradorResultado = $("#registradorResultado");
 const adminGrupoFiltro = $("#adminGrupoFiltro");
+const adminResultadoFiltro = $("#adminResultadoFiltro");
 const adminBuscar = $("#adminBuscar");
 const adminResultadosEstado = $("#adminResultadosEstado");
 const adminResultadosContador = $("#adminResultadosContador");
@@ -95,14 +96,22 @@ function llenarFiltroGrupo() {
 
 function obtenerPartidosFiltrados() {
   const filtroGrupo = adminGrupoFiltro.value;
+  const filtroResultado = adminResultadoFiltro.value;
   const texto = normalizarTexto(adminBuscar.value.trim());
 
   return partidos.filter(partido => {
+    const tieneResultado = partido.homeScore !== null
+      && partido.homeScore !== undefined
+      && partido.awayScore !== null
+      && partido.awayScore !== undefined;
     const coincideGrupo = filtroGrupo === "TODOS"
       || (filtroGrupo.startsWith("GRUPO:") && partido.group === filtroGrupo.replace("GRUPO:", ""))
       || (filtroGrupo.startsWith("ETAPA:") && partido.stageName === filtroGrupo.replace("ETAPA:", ""));
+    const coincideResultado = filtroResultado === "TODOS"
+      || (filtroResultado === "CON_RESULTADO" && tieneResultado)
+      || (filtroResultado === "SIN_RESULTADO" && !tieneResultado);
     const textoPartido = normalizarTexto(`${partido.homeTeam} ${partido.awayTeam} ${partido.stadium} ${partido.city} ${partido.matchNumber}`);
-    return coincideGrupo && (!texto || textoPartido.includes(texto));
+    return coincideGrupo && coincideResultado && (!texto || textoPartido.includes(texto));
   });
 }
 
@@ -167,6 +176,7 @@ async function guardarResultado(card, boton) {
     partido.awayScore = awayScore;
     adminResultadosEstado.textContent = `Resultado guardado para Partido ${partido.matchNumber}.`;
     adminResultadosEstado.className = "guardar-estado ok";
+    renderizarResultados();
   } catch (error) {
     adminResultadosEstado.textContent = `No se pudo guardar. ${error.message}`;
     adminResultadosEstado.className = "guardar-estado error";
@@ -176,6 +186,8 @@ async function guardarResultado(card, boton) {
 }
 
 async function cargarDatos() {
+  window.QuinielaLoader?.show();
+
   try {
     adminResultadosEstado.className = "guardar-estado";
     adminResultadosEstado.textContent = "Cargando partidos...";
@@ -196,6 +208,8 @@ async function cargarDatos() {
     adminResultadosEstado.className = "guardar-estado error";
     adminResultadosEstado.textContent = "No se pudieron cargar los datos.";
     adminResultadosListado.innerHTML = `<div class="placeholder">${escapeHtml(error.message)}</div>`;
+  } finally {
+    window.QuinielaLoader?.hide();
   }
 }
 
@@ -208,6 +222,7 @@ adminResultadosListado.addEventListener("click", (event) => {
 });
 
 adminGrupoFiltro.addEventListener("change", renderizarResultados);
+adminResultadoFiltro.addEventListener("change", renderizarResultados);
 adminBuscar.addEventListener("input", renderizarResultados);
 $("#btnActualizarResultados").addEventListener("click", cargarDatos);
 cargarDatos();

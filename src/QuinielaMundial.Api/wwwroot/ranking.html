@@ -6,7 +6,16 @@
   <title>Resultados - Quiniela Mundial 2026</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body data-loader-manual="true">
+    <div class="page-loader" id="pageLoader" role="status" aria-live="polite" aria-label="Cargando contenido">
+        <div class="page-loader-card">
+            <div class="soccer-loader" aria-hidden="true">
+                <img class="soccer-loader-gif" src="assets/soccer-loader.gif" alt="" />
+            </div>
+            <p>Cargando quiniela...</p>
+        </div>
+    </div>
+
     <header class="hero">
         <div class="hero-content">
             <h1>Resultados</h1>
@@ -50,6 +59,7 @@
         <p>© 2026 Impulso Tecnológico. Todos los derechos reservados.</p>
     </footer>
     <script src="config.js"></script>
+    <script src="loader.js"></script>
     <script src="ranking.js"></script>
 </body>
 </html>

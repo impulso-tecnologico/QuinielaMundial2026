@@ -21,6 +21,8 @@ async function apiJson(url, options = {}) {
 }
 
 async function cargarRanking() {
+  window.QuinielaLoader?.show();
+
   try {
     rankingEstado.textContent = "Cargando ranking...";
     const ranking = await apiJson("/api/ranking");
@@ -30,6 +32,8 @@ async function cargarRanking() {
     rankingEstado.textContent = "No se pudo cargar el ranking";
     rankingPodium.innerHTML = `<div class="placeholder" style="grid-column: 1 / -1;">${error.message}</div>`;
     rankingTabla.innerHTML = "";
+  } finally {
+    window.QuinielaLoader?.hide();
   }
 }
 
