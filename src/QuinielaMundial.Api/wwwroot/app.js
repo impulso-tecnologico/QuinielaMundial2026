@@ -11,12 +11,16 @@ const finalWinnerName = $("#finalWinnerName");
 const finalWinnerVotes = $("#finalWinnerVotes");
 const ballonDOrName = $("#ballonDOrName");
 const ballonDOrVotes = $("#ballonDOrVotes");
-const mostGoalsName = $("#mostGoalsName");
-const mostGoalsTotal = $("#mostGoalsTotal");
-const fewestGoalsName = $("#fewestGoalsName");
-const fewestGoalsTotal = $("#fewestGoalsTotal");
-const bestStreakNames = $("#bestStreakNames");
-const bestStreakTotal = $("#bestStreakTotal");
+const popularScoreValue = $("#popularScoreValue");
+const popularScoreTotal = $("#popularScoreTotal");
+const dividedMatchName = $("#dividedMatchName");
+const dividedMatchTotal = $("#dividedMatchTotal");
+const almostKingName = $("#almostKingName");
+const almostKingTotal = $("#almostKingTotal");
+const weeklySaltedName = $("#weeklySaltedName");
+const weeklySaltedTotal = $("#weeklySaltedTotal");
+const exactWizardName = $("#exactWizardName");
+const exactWizardTotal = $("#exactWizardTotal");
 
 let partidos = [];
 
@@ -453,14 +457,30 @@ function formatearVotos(votos) {
   return `${total} voto${total === 1 ? "" : "s"}`;
 }
 
-function formatearGoles(goles) {
-  const total = Number(goles) || 0;
-  return `${total} gol${total === 1 ? "" : "es"} pronosticado${total === 1 ? "" : "s"}`;
+function formatearPronosticos(totalPronosticos) {
+  const total = Number(totalPronosticos) || 0;
+  return `${total} pronóstico${total === 1 ? "" : "s"}`;
 }
 
-function formatearRacha(racha) {
-  const total = Number(racha) || 0;
-  return `${total} partido${total === 1 ? "" : "s"} acertado${total === 1 ? "" : "s"} consecutivo${total === 1 ? "" : "s"}`;
+function formatearCasiAciertos(casiAciertos) {
+  const total = Number(casiAciertos) || 0;
+  return `${total} ${total === 1 ? "vez" : "veces"} a un gol`;
+}
+
+function formatearAciertosJornada(aciertos, partidos) {
+  const totalAciertos = Number(aciertos) || 0;
+  const totalPartidos = Number(partidos) || 0;
+
+  if (totalPartidos <= 0) {
+    return `${totalAciertos} acierto${totalAciertos === 1 ? "" : "s"}`;
+  }
+
+  return `${totalAciertos} acierto${totalAciertos === 1 ? "" : "s"} en ${totalPartidos} partido${totalPartidos === 1 ? "" : "s"}`;
+}
+
+function formatearMarcadoresExactos(exactos) {
+  const total = Number(exactos) || 0;
+  return `${total} marcador${total === 1 ? "" : "es"} exacto${total === 1 ? "" : "s"}`;
 }
 
 function pintarHighlight(nombreElemento, votosElemento, dato, etiquetaSinDatos, mostrarBandera = false) {
@@ -480,53 +500,98 @@ function pintarHighlight(nombreElemento, votosElemento, dato, etiquetaSinDatos, 
   votosElemento.textContent = formatearVotos(dato.votes);
 }
 
-function pintarGoalsHighlight(nombreElemento, golesElemento, dato, etiquetaSinDatos) {
-  if (!nombreElemento || !golesElemento) return;
+function pintarScoreHighlight(scoreElemento, pronosticosElemento, dato) {
+  if (!scoreElemento || !pronosticosElemento) return;
+
+  if (!dato?.score) {
+    scoreElemento.textContent = "Sin datos";
+    pronosticosElemento.textContent = "Sin pronósticos registrados";
+    return;
+  }
+
+  scoreElemento.textContent = dato.score;
+  pronosticosElemento.textContent = formatearPronosticos(dato.predictions);
+}
+
+function pintarMatchHighlight(nombreElemento, pronosticosElemento, dato) {
+  if (!nombreElemento || !pronosticosElemento) return;
 
   if (!dato?.name) {
-    nombreElemento.textContent = etiquetaSinDatos;
-    golesElemento.textContent = "Sin pronósticos registrados";
+    nombreElemento.textContent = "Sin datos";
+    pronosticosElemento.textContent = "Sin pronósticos suficientes";
     return;
   }
 
   nombreElemento.textContent = dato.name;
-  golesElemento.textContent = formatearGoles(dato.goals);
+  pronosticosElemento.textContent = formatearPronosticos(dato.predictions);
 }
 
-function pintarStreakHighlight(nombresElemento, rachaElemento, dato) {
-  if (!nombresElemento || !rachaElemento) return;
+function pintarAlmostKingHighlight(nombreElemento, totalElemento, dato) {
+  if (!nombreElemento || !totalElemento) return;
 
-  if (!dato?.names?.length || !dato?.streak) {
-    nombresElemento.textContent = "Sin datos";
-    rachaElemento.textContent = "Sin partidos acertados";
+  if (!dato?.name || !dato?.nearMisses) {
+    nombreElemento.textContent = "Sin datos";
+    totalElemento.textContent = "Sin casi aciertos registrados";
     return;
   }
 
-  nombresElemento.textContent = dato.names.join(", ");
-  rachaElemento.textContent = formatearRacha(dato.streak);
+  nombreElemento.textContent = dato.name;
+  totalElemento.textContent = formatearCasiAciertos(dato.nearMisses);
+}
+
+function pintarWeeklySaltedHighlight(nombreElemento, totalElemento, dato) {
+  if (!nombreElemento || !totalElemento) return;
+
+  if (!dato?.name || dato.correctPredictions == null) {
+    nombreElemento.textContent = "Sin datos";
+    totalElemento.textContent = "Sin partidos evaluados esta jornada";
+    return;
+  }
+
+  nombreElemento.textContent = dato.name;
+  totalElemento.textContent = formatearAciertosJornada(dato.correctPredictions, dato.evaluatedMatches);
+}
+
+function pintarExactWizardHighlight(nombreElemento, totalElemento, dato) {
+  if (!nombreElemento || !totalElemento) return;
+
+  if (!dato?.name || !dato?.exactScores) {
+    nombreElemento.textContent = "Sin datos";
+    totalElemento.textContent = "Sin marcadores exactos registrados";
+    return;
+  }
+
+  nombreElemento.textContent = dato.name;
+  totalElemento.textContent = formatearMarcadoresExactos(dato.exactScores);
 }
 
 async function cargarHighlights() {
-  if (!finalWinnerName && !ballonDOrName && !mostGoalsName && !fewestGoalsName && !bestStreakNames) return;
+  if (!finalWinnerName && !ballonDOrName && !popularScoreValue && !dividedMatchName && !almostKingName && !weeklySaltedName && !exactWizardName) return;
 
   try {
     const highlights = await apiJson("/api/highlights");
     pintarHighlight(finalWinnerName, finalWinnerVotes, highlights.finalWinner, "Sin favorito definido", true);
     pintarHighlight(ballonDOrName, ballonDOrVotes, highlights.ballonDOr, "Sin favorito definido");
-    pintarGoalsHighlight(mostGoalsName, mostGoalsTotal, highlights.mostPredictedGoals, "Sin datos");
-    pintarGoalsHighlight(fewestGoalsName, fewestGoalsTotal, highlights.fewestPredictedGoals, "Sin datos");
-    pintarStreakHighlight(bestStreakNames, bestStreakTotal, highlights.longestCorrectStreak);
+    pintarScoreHighlight(popularScoreValue, popularScoreTotal, highlights.mostPopularScore);
+    pintarMatchHighlight(dividedMatchName, dividedMatchTotal, highlights.mostDividedMatch);
+    pintarAlmostKingHighlight(almostKingName, almostKingTotal, highlights.almostExactKing);
+    pintarWeeklySaltedHighlight(weeklySaltedName, weeklySaltedTotal, highlights.weeklySalted);
+    pintarExactWizardHighlight(exactWizardName, exactWizardTotal, highlights.exactScoreWizard);
   } catch (error) {
     if (finalWinnerName) finalWinnerName.textContent = "No disponible";
     if (finalWinnerVotes) finalWinnerVotes.textContent = "No se pudieron cargar los votos";
     if (ballonDOrName) ballonDOrName.textContent = "No disponible";
     if (ballonDOrVotes) ballonDOrVotes.textContent = "No se pudieron cargar los votos";
-    if (mostGoalsName) mostGoalsName.textContent = "No disponible";
-    if (mostGoalsTotal) mostGoalsTotal.textContent = "No se pudieron cargar los goles";
-    if (fewestGoalsName) fewestGoalsName.textContent = "No disponible";
-    if (fewestGoalsTotal) fewestGoalsTotal.textContent = "No se pudieron cargar los goles";
-    if (bestStreakNames) bestStreakNames.textContent = "No disponible";
-    if (bestStreakTotal) bestStreakTotal.textContent = "No se pudo cargar la racha";
+    if (popularScoreValue) popularScoreValue.textContent = "No disponible";
+    if (popularScoreTotal) popularScoreTotal.textContent = "No se pudieron cargar los pronósticos";
+    if (dividedMatchName) dividedMatchName.textContent = "No disponible";
+    if (dividedMatchTotal) dividedMatchTotal.textContent = "No se pudieron cargar los pronósticos";
+    if (almostKingName) almostKingName.textContent = "No disponible";
+    if (almostKingTotal) almostKingTotal.textContent = "No se pudieron cargar los casi aciertos";
+    if (weeklySaltedName) weeklySaltedName.textContent = "No disponible";
+    if (weeklySaltedTotal) weeklySaltedTotal.textContent = "No se pudieron cargar los aciertos de la jornada";
+    if (exactWizardName) exactWizardName.textContent = "No disponible";
+    if (exactWizardTotal) exactWizardTotal.textContent = "No se pudieron cargar los marcadores exactos";
   }
 }
 
