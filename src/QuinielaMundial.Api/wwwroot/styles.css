@@ -400,6 +400,53 @@ button:hover {
   text-transform: uppercase;
 }
 
+.voto-tooltip {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #d9e5fb;
+  border-radius: 999px;
+  background: #f8fbff;
+  color: #246fc2;
+  cursor: help;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.voto-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  width: min(280px, calc(100vw - 48px));
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #10182c;
+  box-shadow: 0 12px 30px rgba(16, 24, 44, 0.2);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  text-transform: none;
+  transform: translateY(4px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.voto-tooltip:hover::after,
+.voto-tooltip:focus::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .voto-card strong {
   color: #10182c;
   font-size: clamp(28px, 4.2vw, 40px);

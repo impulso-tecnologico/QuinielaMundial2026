@@ -28,6 +28,7 @@ const rareProphetName = $("#rareProphetName");
 const rareProphetTotal = $("#rareProphetTotal");
 
 let partidos = [];
+let fechaSeleccionadaHighlights = "";
 
 const ZONA_HORARIA_GUADALAJARA = "America/Mexico_City";
 
@@ -390,6 +391,7 @@ async function cargarPartidos() {
   const porcentajesPorPartido = crearMapaPorcentajesPronosticos(porcentajes);
   partidos = data.map(partido => mapearPartido(partido, porcentajesPorPartido));
   const seleccion = seleccionarPartidosPorFecha(partidos);
+  fechaSeleccionadaHighlights = seleccion.fecha || "";
 
   fechaPartidosTitulo.textContent = describirSeleccionFecha(seleccion);
   fechaPartidosDetalle.textContent = seleccion.fecha
@@ -606,11 +608,12 @@ function pintarRareProphetHighlight(nombreElemento, totalElemento, dato) {
   totalElemento.textContent = formatearPuntosRaros(dato.rarePoints);
 }
 
-async function cargarHighlights() {
+async function cargarHighlights(fecha = "") {
   if (!finalWinnerName && !ballonDOrName && !popularScoreValue && !dividedMatchName && !almostKingName && !weeklySaltedName && !exactWizardName && !weeklyRiseName && !rareProphetName) return;
 
   try {
-    const highlights = await apiJson("/api/highlights");
+    const query = fecha ? `?date=${encodeURIComponent(fecha)}` : "";
+    const highlights = await apiJson(`/api/highlights${query}`);
     pintarHighlight(finalWinnerName, finalWinnerVotes, highlights.finalWinner, "Sin favorito definido", true);
     pintarHighlight(ballonDOrName, ballonDOrVotes, highlights.ballonDOr, "Sin favorito definido");
     pintarScoreHighlight(popularScoreValue, popularScoreTotal, highlights.mostPopularScore);
@@ -659,9 +662,10 @@ async function iniciar() {
 
   await Promise.allSettled([
     cargarTopRanking(),
-    cargarHighlights(),
     cargarPartidosConFallback()
   ]);
+
+  await cargarHighlights(fechaSeleccionadaHighlights);
 
   window.QuinielaLoader?.hide();
 }

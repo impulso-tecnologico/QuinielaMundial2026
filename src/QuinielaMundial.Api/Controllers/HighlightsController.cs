@@ -10,7 +10,7 @@ namespace QuinielaMundial.Api.Controllers;
 public sealed class HighlightsController(ISqlConnectionFactory connectionFactory) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<PublicHighlightsResponse>> Get(CancellationToken cancellationToken)
+    public async Task<ActionResult<PublicHighlightsResponse>> Get([FromQuery] DateOnly? date, CancellationToken cancellationToken)
     {
         const string finalWinnerSql = """
             WITH FinalVotes AS
@@ -50,19 +50,50 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
             """;
 
         const string mostPopularScoreSql = """
-            WITH ScorePredictions AS
+            WITH SelectedDay AS
             (
-                SELECT HomeScore, AwayScore
-                FROM dbo.Predictions
-                WHERE HomeScore IS NOT NULL
-                  AND AwayScore IS NOT NULL
+                SELECT COALESCE(
+                    @Date,
+                    (
+                        SELECT MAX(CONVERT(date, m.MatchDate))
+                        FROM dbo.Matches m
+                        WHERE EXISTS
+                        (
+                            SELECT 1
+                            FROM dbo.Predictions p
+                            WHERE p.MatchId = m.Id
+                              AND p.HomeScore IS NOT NULL
+                              AND p.AwayScore IS NOT NULL
+                        )
+                           OR EXISTS
+                        (
+                            SELECT 1
+                            FROM dbo.KnockoutPredictions kp
+                            WHERE kp.BracketMatchNumber = m.BracketMatchNumber
+                              AND kp.HomeScore IS NOT NULL
+                              AND kp.AwayScore IS NOT NULL
+                        )
+                    )
+                ) AS MatchDay
+            ), ScorePredictions AS
+            (
+                SELECT p.HomeScore, p.AwayScore
+                FROM dbo.Predictions p
+                INNER JOIN dbo.Matches m ON m.Id = p.MatchId
+                CROSS JOIN SelectedDay sd
+                WHERE p.HomeScore IS NOT NULL
+                  AND p.AwayScore IS NOT NULL
+                  AND CONVERT(date, m.MatchDate) = sd.MatchDay
 
                 UNION ALL
 
-                SELECT HomeScore, AwayScore
-                FROM dbo.KnockoutPredictions
-                WHERE HomeScore IS NOT NULL
-                  AND AwayScore IS NOT NULL
+                SELECT kp.HomeScore, kp.AwayScore
+                FROM dbo.KnockoutPredictions kp
+                INNER JOIN dbo.Matches m ON m.BracketMatchNumber = kp.BracketMatchNumber
+                CROSS JOIN SelectedDay sd
+                WHERE kp.HomeScore IS NOT NULL
+                  AND kp.AwayScore IS NOT NULL
+                  AND CONVERT(date, m.MatchDate) = sd.MatchDay
             )
             SELECT TOP (1)
                 CONCAT(HomeScore, N' - ', AwayScore) AS Score,
@@ -73,7 +104,24 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
             """;
 
         const string mostDividedMatchSql = """
-            WITH MatchVotes AS
+            WITH SelectedDay AS
+            (
+                SELECT COALESCE(
+                    @Date,
+                    (
+                        SELECT MAX(CONVERT(date, m.MatchDate))
+                        FROM dbo.Matches m
+                        WHERE EXISTS
+                        (
+                            SELECT 1
+                            FROM dbo.Predictions p
+                            WHERE p.MatchId = m.Id
+                              AND p.HomeScore IS NOT NULL
+                              AND p.AwayScore IS NOT NULL
+                        )
+                    )
+                ) AS MatchDay
+            ), MatchVotes AS
             (
                 SELECT
                     m.Id,
@@ -88,8 +136,10 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                 INNER JOIN dbo.Predictions p ON p.MatchId = m.Id
                 LEFT JOIN dbo.Teams ht ON ht.Id = m.HomeTeamId
                 LEFT JOIN dbo.Teams at ON at.Id = m.AwayTeamId
+                CROSS JOIN SelectedDay sd
                 WHERE p.HomeScore IS NOT NULL
                   AND p.AwayScore IS NOT NULL
+                  AND CONVERT(date, m.MatchDate) = sd.MatchDay
                 GROUP BY m.Id, m.MatchNumber, COALESCE(ht.Name, m.HomePlaceholder), COALESCE(at.Name, m.AwayPlaceholder)
             ), Totals AS
             (
@@ -445,11 +495,15 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
             ballonDOrSql,
             cancellationToken: cancellationToken));
 
+        var parameters = new { Date = date?.ToDateTime(TimeOnly.MinValue).Date };
+
         var mostPopularScore = await connection.QueryFirstOrDefaultAsync<HighlightScoreResponse>(new CommandDefinition(
             mostPopularScoreSql,
+            parameters,
             cancellationToken: cancellationToken));
         var mostDividedMatch = await connection.QueryFirstOrDefaultAsync<HighlightMatchResponse>(new CommandDefinition(
             mostDividedMatchSql,
+            parameters,
             cancellationToken: cancellationToken));
 
         var almostExactKing = await connection.QueryFirstOrDefaultAsync<HighlightAlmostExactResponse>(new CommandDefinition(
