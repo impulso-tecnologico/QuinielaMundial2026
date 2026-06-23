@@ -9,4 +9,6 @@ public sealed class PublicHighlightsResponse
     public HighlightAlmostExactResponse? AlmostExactKing { get; set; }
     public HighlightWeeklySaltedResponse? WeeklySalted { get; set; }
     public HighlightExactScoreResponse? ExactScoreWizard { get; set; }
+    public HighlightWeeklyRiseResponse? WeeklyRise { get; set; }
+    public HighlightRarePredictionResponse? RareProphet { get; set; }
 }

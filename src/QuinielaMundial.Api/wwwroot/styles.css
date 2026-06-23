@@ -387,6 +387,10 @@ button:hover {
   position: relative;
 }
 
+.voto-card[hidden] {
+  display: none;
+}
+
 .voto-label {
   color: #006b24;
   font-size: 14px;
@@ -489,6 +493,28 @@ button:hover {
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='m7.5 5.6 2.9 2.9-6.9 6.9-2.9-2.9zm4.3 1.5L8.9 4.2l1.4-1.4 2.9 2.9zm3.6 3.6-2.9-2.9 1.4-1.4 2.9 2.9zM4.2 21.2l-1.4-1.4 2.9-2.9 1.4 1.4zm14.9-7.1 1.4 1.4-2.9 2.9-1.4-1.4zm1.3-9.9-2.9 2.9-1.4-1.4 2.9-2.9z'/%3E%3C/svg%3E");
 }
 
+.voto-card-phoenix .voto-label,
+.voto-card-phoenix small::before {
+  color: #f97316;
+}
+
+.voto-card-phoenix small::before {
+  background: #f97316;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M13 3v7h6l-8 11v-7H5z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M13 3v7h6l-8 11v-7H5z'/%3E%3C/svg%3E");
+}
+
+.voto-card-prophet .voto-label,
+.voto-card-prophet small::before {
+  color: #0891b2;
+}
+
+.voto-card-prophet small::before {
+  background: #0891b2;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m0 2a8 8 0 0 1 7.75 6h-3.26a5 5 0 0 0-8.98 0H4.25A8 8 0 0 1 12 4m0 3a3 3 0 0 1 2.83 2H9.17A3 3 0 0 1 12 7m0 13a8 8 0 0 1-7.75-6h3.26a5 5 0 0 0 8.98 0h3.26A8 8 0 0 1 12 20m0-3a3 3 0 0 1-2.83-2h5.66A3 3 0 0 1 12 17'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m0 2a8 8 0 0 1 7.75 6h-3.26a5 5 0 0 0-8.98 0H4.25A8 8 0 0 1 12 4m0 3a3 3 0 0 1 2.83 2H9.17A3 3 0 0 1 12 7m0 13a8 8 0 0 1-7.75-6h3.26a5 5 0 0 0 8.98 0h3.26A8 8 0 0 1 12 20m0-3a3 3 0 0 1-2.83-2h5.66A3 3 0 0 1 12 17'/%3E%3C/svg%3E");
+}
+
 .ranking-compact-wrap {
   border-radius: 14px;
   overflow-x: visible;
@@ -563,6 +589,188 @@ button:hover {
 .partido.partido-capturado {
   border-color: var(--verde);
   box-shadow: 0 0 0 3px rgba(15, 123, 69, 0.14), 0 10px 28px rgba(16, 24, 40, 0.06);
+}
+
+.resultados-partidos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.resultado-partido-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--borde);
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
+}
+
+.resultado-partido-card.resultado-partido-pendiente {
+  opacity: 0.82;
+}
+
+.resultado-partido-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.resultado-partido-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.resultado-partido-main strong {
+  color: var(--texto);
+  font-size: 18px;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.resultado-partido-main strong:last-child {
+  text-align: right;
+}
+
+.resultado-equipo-con-bandera {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+}
+
+.resultado-equipo-visitante {
+  justify-content: flex-end;
+}
+
+.resultado-flag {
+  width: 34px;
+  height: 24px;
+  border-radius: 4px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px rgba(16, 24, 40, 0.08);
+  flex: 0 0 auto;
+}
+
+.resultado-partido-marcador {
+  min-width: 76px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: #eef4f2;
+  color: var(--verde-oscuro);
+  font-size: 18px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.resultado-partido-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.resultado-participantes-btn {
+  width: fit-content;
+}
+
+.resultados-participantes-wrap {
+  border-radius: 14px;
+}
+
+.resultados-participantes-table {
+  min-width: 0;
+}
+
+.resultados-participantes-table th,
+.resultados-participantes-table td {
+  width: 50%;
+}
+
+.resultados-participantes-table tr.resultado-participante-correcto td {
+  background: #e7f6ee;
+  color: #0b6b3a;
+}
+
+.resultados-participantes-table tr.resultado-participante-exacto td {
+  background: #fff4c7;
+  color: #8a5a00;
+}
+
+.resultados-participantes-table tr.resultado-participante-correcto td:first-child,
+.resultados-participantes-table tr.resultado-participante-exacto td:first-child {
+  font-weight: 900;
+}
+
+.resultados-participantes-empty {
+  margin: 0;
+}
+
+.modal-open {
+  overflow: hidden;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(12, 24, 18, 0.54);
+  backdrop-filter: blur(6px);
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.modal-card {
+  width: min(760px, 100%);
+  max-height: min(82vh, 760px);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  border: 1px solid var(--borde);
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 24px 80px rgba(16, 24, 40, 0.28);
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid #edf2f0;
+}
+
+.modal-header h2 {
+  margin: 6px 0 4px;
+  color: var(--texto);
+  font-size: clamp(20px, 3vw, 28px);
+  line-height: 1.1;
+}
+
+.modal-close {
+  flex: 0 0 auto;
+}
+
+.resultados-modal-contenido {
+  min-height: 160px;
+  overflow: auto;
+  padding: 16px 18px 18px;
 }
 
 .instrucciones-content {
@@ -1194,6 +1402,7 @@ button:hover {
       .resumen,
       .dashboard-publico,
       .votaciones-destacadas,
+      .resultados-partidos,
       .partidos,
       .podium,
       .instrucciones-grid,
@@ -1306,6 +1515,56 @@ button:hover {
 
   .partido {
     padding: 13px;
+  }
+
+  .resultado-partido-card {
+    padding: 13px;
+  }
+
+  .resultado-partido-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .resultado-partido-main {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .resultado-partido-main strong,
+  .resultado-partido-main strong:last-child {
+    text-align: center;
+  }
+
+  .resultado-equipo-con-bandera,
+  .resultado-equipo-visitante {
+    justify-content: center;
+  }
+
+  .resultado-partido-marcador {
+    justify-self: center;
+  }
+
+  .resultado-participantes-btn {
+    width: 100%;
+  }
+
+  .modal-backdrop {
+    padding: 10px;
+  }
+
+  .modal-card {
+    max-height: 88vh;
+    border-radius: 18px;
+  }
+
+  .modal-header {
+    flex-direction: column;
+  }
+
+  .modal-close {
+    width: 100%;
   }
 
   .equipos {

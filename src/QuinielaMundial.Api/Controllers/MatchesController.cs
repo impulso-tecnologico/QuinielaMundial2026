@@ -88,6 +88,68 @@ public sealed class MatchesController(ISqlConnectionFactory connectionFactory) :
         return Ok(matches.ToList());
     }
 
+    [HttpGet("{matchId:int}/participant-results")]
+    public async Task<ActionResult<IReadOnlyList<MatchParticipantResultResponse>>> GetParticipantResults(int matchId, CancellationToken cancellationToken)
+    {
+        const string matchExistsSql = "SELECT COUNT(1) FROM dbo.Matches WHERE Id = @MatchId;";
+        const string sql = """
+            WITH MatchInfo AS
+            (
+                SELECT Id, BracketMatchNumber
+                FROM dbo.Matches
+                WHERE Id = @MatchId
+            ), Results AS
+            (
+                SELECT
+                    pa.Name AS ParticipantName,
+                    p.HomeScore,
+                    p.AwayScore
+                FROM MatchInfo mi
+                INNER JOIN dbo.Predictions p
+                    ON mi.BracketMatchNumber IS NULL
+                   AND p.MatchId = mi.Id
+                INNER JOIN dbo.Participants pa ON pa.Id = p.ParticipantId
+                WHERE p.HomeScore IS NOT NULL
+                  AND p.AwayScore IS NOT NULL
+
+                UNION ALL
+
+                SELECT
+                    pa.Name AS ParticipantName,
+                    kp.HomeScore,
+                    kp.AwayScore
+                FROM MatchInfo mi
+                INNER JOIN dbo.KnockoutPredictions kp
+                    ON mi.BracketMatchNumber IS NOT NULL
+                   AND kp.BracketMatchNumber = mi.BracketMatchNumber
+                INNER JOIN dbo.Participants pa ON pa.Id = kp.ParticipantId
+                WHERE kp.HomeScore IS NOT NULL
+                  AND kp.AwayScore IS NOT NULL
+            )
+            SELECT ParticipantName, HomeScore, AwayScore
+            FROM Results
+            ORDER BY ParticipantName;
+            """;
+
+        using var connection = connectionFactory.CreateConnection();
+        var matchExists = await connection.ExecuteScalarAsync<int>(new CommandDefinition(
+            matchExistsSql,
+            new { MatchId = matchId },
+            cancellationToken: cancellationToken)) > 0;
+
+        if (!matchExists)
+        {
+            return NotFound("Partido no encontrado.");
+        }
+
+        var results = await connection.QueryAsync<MatchParticipantResultResponse>(new CommandDefinition(
+            sql,
+            new { MatchId = matchId },
+            cancellationToken: cancellationToken));
+
+        return Ok(results.ToList());
+    }
+
     [HttpPut("{matchId:int}/result")]
     public async Task<IActionResult> UpdateResult(int matchId, UpdateResultRequest request, CancellationToken cancellationToken)
     {

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resultados de partidos - Quiniela Mundial 2026</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="pagina-resultados-partidos" data-loader-manual="true">
+  <div class="page-loader" id="pageLoader" role="status" aria-live="polite" aria-label="Cargando contenido">
+    <div class="page-loader-card">
+      <div class="soccer-loader" aria-hidden="true">
+        <img class="soccer-loader-gif" src="assets/soccer-loader.gif" alt="" />
+      </div>
+      <p>Cargando quiniela...</p>
+    </div>
+  </div>
+
+  <header class="hero">
+    <div class="hero-content">
+      <h1>Resultados de partidos</h1>
+      <p style="font-weight: bold;">Marcadores reales y resultados guardados por participante</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel" style="margin-top:10px">
+      <div class="acciones" style="margin-top: 0;">
+        <button class="btn-secondary" onclick="window.location.href='index.html'">Volver a la quiniela</button>
+        <button class="btn-secondary" onclick="window.location.href='ranking.html'">Ver ranking</button>
+        <button class="btn-secondary" onclick="window.location.href='predicciones.html'">Ver predicciones</button>
+        <button class="btn-primary" id="btnActualizarResultadosPartidos">Actualizar</button>
+      </div>
+
+      <div class="predicciones-filtros resultados-filtros">
+        <div>
+          <label for="grupoResultadoFiltro">Grupo</label>
+          <select id="grupoResultadoFiltro">
+            <option value="TODOS">Todos los grupos</option>
+          </select>
+        </div>
+        <div>
+          <label for="equipoResultadoFiltro">Equipo</label>
+          <select id="equipoResultadoFiltro">
+            <option value="TODOS">Todos los equipos</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <h2>Partidos</h2>
+        <small id="contadorResultadosPartidos"></small>
+      </div>
+      <p class="fecha-contexto" id="resultadosPartidosEstado" aria-live="polite">Cargando partidos...</p>
+
+      <section class="resultados-partidos" id="resultadosPartidos"></section>
+    </section>
+  </main>
+
+  <div class="modal-backdrop resultados-modal" id="resultadosParticipantesModal" role="dialog" aria-modal="true" aria-labelledby="resultadosModalTitulo" hidden>
+    <div class="modal-card resultados-modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="voto-label">Resultados de participantes</span>
+          <h2 id="resultadosModalTitulo">Partido</h2>
+          <p id="resultadosModalDetalle" class="resultado-partido-meta"></p>
+        </div>
+        <button class="btn-secondary modal-close" type="button" id="cerrarResultadosModal">Cerrar</button>
+      </div>
+      <div id="resultadosModalContenido" class="resultados-modal-contenido"></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 Impulso Tecnológico. Todos los derechos reservados.</p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="loader.js"></script>
+  <script src="resultados-partidos.js"></script>
+</body>
+</html>

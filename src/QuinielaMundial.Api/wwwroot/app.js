@@ -21,6 +21,11 @@ const weeklySaltedName = $("#weeklySaltedName");
 const weeklySaltedTotal = $("#weeklySaltedTotal");
 const exactWizardName = $("#exactWizardName");
 const exactWizardTotal = $("#exactWizardTotal");
+const weeklyRiseCard = $("#weeklyRiseCard");
+const weeklyRiseName = $("#weeklyRiseName");
+const weeklyRiseTotal = $("#weeklyRiseTotal");
+const rareProphetName = $("#rareProphetName");
+const rareProphetTotal = $("#rareProphetTotal");
 
 let partidos = [];
 
@@ -483,6 +488,16 @@ function formatearMarcadoresExactos(exactos) {
   return `${total} marcador${total === 1 ? "" : "es"} exacto${total === 1 ? "" : "s"}`;
 }
 
+function formatearPosicionesSubidas(posiciones) {
+  const total = Number(posiciones) || 0;
+  return `Subió ${total} posición${total === 1 ? "" : "es"}`;
+}
+
+function formatearPuntosRaros(puntos) {
+  const total = Number(puntos) || 0;
+  return `${total} punto${total === 1 ? "" : "s"} raro${total === 1 ? "" : "s"}`;
+}
+
 function pintarHighlight(nombreElemento, votosElemento, dato, etiquetaSinDatos, mostrarBandera = false) {
   if (!nombreElemento || !votosElemento) return;
 
@@ -565,8 +580,34 @@ function pintarExactWizardHighlight(nombreElemento, totalElemento, dato) {
   totalElemento.textContent = formatearMarcadoresExactos(dato.exactScores);
 }
 
+function pintarWeeklyRiseHighlight(nombreElemento, totalElemento, dato) {
+  if (!nombreElemento || !totalElemento) return;
+
+  if (!dato?.name || Number(dato.positionsGained) <= 5) {
+    if (weeklyRiseCard) weeklyRiseCard.hidden = true;
+    return;
+  }
+
+  if (weeklyRiseCard) weeklyRiseCard.hidden = false;
+  nombreElemento.textContent = dato.name;
+  totalElemento.textContent = formatearPosicionesSubidas(dato.positionsGained);
+}
+
+function pintarRareProphetHighlight(nombreElemento, totalElemento, dato) {
+  if (!nombreElemento || !totalElemento) return;
+
+  if (!dato?.name || dato.rarePoints == null) {
+    nombreElemento.textContent = "Sin datos";
+    totalElemento.textContent = "Sin aciertos raros registrados";
+    return;
+  }
+
+  nombreElemento.textContent = dato.name;
+  totalElemento.textContent = formatearPuntosRaros(dato.rarePoints);
+}
+
 async function cargarHighlights() {
-  if (!finalWinnerName && !ballonDOrName && !popularScoreValue && !dividedMatchName && !almostKingName && !weeklySaltedName && !exactWizardName) return;
+  if (!finalWinnerName && !ballonDOrName && !popularScoreValue && !dividedMatchName && !almostKingName && !weeklySaltedName && !exactWizardName && !weeklyRiseName && !rareProphetName) return;
 
   try {
     const highlights = await apiJson("/api/highlights");
@@ -577,6 +618,8 @@ async function cargarHighlights() {
     pintarAlmostKingHighlight(almostKingName, almostKingTotal, highlights.almostExactKing);
     pintarWeeklySaltedHighlight(weeklySaltedName, weeklySaltedTotal, highlights.weeklySalted);
     pintarExactWizardHighlight(exactWizardName, exactWizardTotal, highlights.exactScoreWizard);
+    pintarWeeklyRiseHighlight(weeklyRiseName, weeklyRiseTotal, highlights.weeklyRise);
+    pintarRareProphetHighlight(rareProphetName, rareProphetTotal, highlights.rareProphet);
   } catch (error) {
     if (finalWinnerName) finalWinnerName.textContent = "No disponible";
     if (finalWinnerVotes) finalWinnerVotes.textContent = "No se pudieron cargar los votos";
@@ -592,6 +635,9 @@ async function cargarHighlights() {
     if (weeklySaltedTotal) weeklySaltedTotal.textContent = "No se pudieron cargar los aciertos de la jornada";
     if (exactWizardName) exactWizardName.textContent = "No disponible";
     if (exactWizardTotal) exactWizardTotal.textContent = "No se pudieron cargar los marcadores exactos";
+    if (weeklyRiseCard) weeklyRiseCard.hidden = true;
+    if (rareProphetName) rareProphetName.textContent = "No disponible";
+    if (rareProphetTotal) rareProphetTotal.textContent = "No se pudieron cargar los puntos raros";
   }
 }
 

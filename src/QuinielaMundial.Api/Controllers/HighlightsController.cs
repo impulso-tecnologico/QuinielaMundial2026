@@ -286,6 +286,157 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
             ORDER BY COUNT(1) DESC, Name ASC;
             """;
 
+        const string weeklyRiseSql = """
+            WITH LatestResult AS
+            (
+                SELECT MAX(MatchDate) AS LatestMatchDate
+                FROM dbo.Matches
+                WHERE HomeScore IS NOT NULL
+                  AND AwayScore IS NOT NULL
+            ), WeekWindow AS
+            (
+                SELECT DATEADD(DAY, -(DATEDIFF(DAY, CONVERT(date, '19000101'), LatestMatchDate) % 7), LatestMatchDate) AS WeekStart
+                FROM LatestResult
+                WHERE LatestMatchDate IS NOT NULL
+            ), RegularScores AS
+            (
+                SELECT
+                    pa.Id AS ParticipantId,
+                    pa.Name,
+                    m.MatchDate,
+                    CASE
+                        WHEN p.Id IS NOT NULL
+                             AND p.HomeScore IS NOT NULL
+                             AND p.AwayScore IS NOT NULL THEN
+                            CASE WHEN SIGN(p.HomeScore - p.AwayScore) = SIGN(m.HomeScore - m.AwayScore) THEN 1 ELSE 0 END +
+                            CASE WHEN p.HomeScore = m.HomeScore AND p.AwayScore = m.AwayScore THEN 1 ELSE 0 END
+                        ELSE 0
+                    END AS Points
+                FROM dbo.Participants pa
+                CROSS JOIN dbo.Matches m
+                LEFT JOIN dbo.Predictions p
+                    ON p.ParticipantId = pa.Id
+                   AND p.MatchId = m.Id
+                WHERE m.BracketMatchNumber IS NULL
+                  AND m.HomeScore IS NOT NULL
+                  AND m.AwayScore IS NOT NULL
+            ), KnockoutScores AS
+            (
+                SELECT
+                    pa.Id AS ParticipantId,
+                    pa.Name,
+                    m.MatchDate,
+                    CASE
+                        WHEN kp.Id IS NOT NULL
+                             AND kp.HomeScore IS NOT NULL
+                             AND kp.AwayScore IS NOT NULL THEN
+                            CASE WHEN SIGN(kp.HomeScore - kp.AwayScore) = SIGN(m.HomeScore - m.AwayScore) THEN 1 ELSE 0 END +
+                            CASE WHEN kp.HomeScore = m.HomeScore AND kp.AwayScore = m.AwayScore THEN 1 ELSE 0 END
+                        ELSE 0
+                    END AS Points
+                FROM dbo.Participants pa
+                CROSS JOIN dbo.Matches m
+                LEFT JOIN dbo.KnockoutPredictions kp
+                    ON kp.ParticipantId = pa.Id
+                   AND kp.BracketMatchNumber = m.BracketMatchNumber
+                WHERE m.BracketMatchNumber IS NOT NULL
+                  AND m.HomeScore IS NOT NULL
+                  AND m.AwayScore IS NOT NULL
+            ), Scores AS
+            (
+                SELECT ParticipantId, Name, MatchDate, Points FROM RegularScores
+
+                UNION ALL
+
+                SELECT ParticipantId, Name, MatchDate, Points FROM KnockoutScores
+            ), CurrentTotals AS
+            (
+                SELECT ParticipantId, Name, SUM(Points) AS Points
+                FROM Scores
+                GROUP BY ParticipantId, Name
+            ), PreviousTotals AS
+            (
+                SELECT
+                    s.ParticipantId,
+                    s.Name,
+                    SUM(CASE WHEN s.MatchDate < w.WeekStart THEN s.Points ELSE 0 END) AS Points
+                FROM Scores s
+                CROSS JOIN WeekWindow w
+                GROUP BY s.ParticipantId, s.Name
+            ), CurrentRank AS
+            (
+                SELECT
+                    ParticipantId,
+                    Name,
+                    CAST(DENSE_RANK() OVER (ORDER BY Points DESC) AS INT) AS CurrentPosition
+                FROM CurrentTotals
+            ), PreviousRank AS
+            (
+                SELECT
+                    ParticipantId,
+                    CAST(DENSE_RANK() OVER (ORDER BY Points DESC) AS INT) AS PreviousPosition
+                FROM PreviousTotals
+            ), Movement AS
+            (
+                SELECT
+                    c.Name,
+                    p.PreviousPosition,
+                    c.CurrentPosition,
+                    p.PreviousPosition - c.CurrentPosition AS PositionsGained
+                FROM CurrentRank c
+                INNER JOIN PreviousRank p ON p.ParticipantId = c.ParticipantId
+            )
+            SELECT TOP (1)
+                Name,
+                PositionsGained,
+                PreviousPosition,
+                CurrentPosition
+            FROM Movement
+            WHERE PositionsGained > 0
+            ORDER BY PositionsGained DESC, CurrentPosition ASC, Name ASC;
+            """;
+
+        const string rareProphetSql = """
+            WITH MatchPredictionTotals AS
+            (
+                SELECT
+                    MatchId,
+                    COUNT(1) AS TotalPredictions,
+                    SUM(CASE WHEN HomeScore > AwayScore THEN 1 ELSE 0 END) AS HomeWinPredictions,
+                    SUM(CASE WHEN HomeScore = AwayScore THEN 1 ELSE 0 END) AS DrawPredictions,
+                    SUM(CASE WHEN AwayScore > HomeScore THEN 1 ELSE 0 END) AS AwayWinPredictions
+                FROM dbo.Predictions
+                WHERE HomeScore IS NOT NULL
+                  AND AwayScore IS NOT NULL
+                GROUP BY MatchId
+            ), RareHits AS
+            (
+                SELECT
+                    p.ParticipantId,
+                    pa.Name,
+                    CASE
+                        WHEN SIGN(m.HomeScore - m.AwayScore) = 1 THEN 100.0 - (100.0 * t.HomeWinPredictions / NULLIF(t.TotalPredictions, 0))
+                        WHEN SIGN(m.HomeScore - m.AwayScore) = 0 THEN 100.0 - (100.0 * t.DrawPredictions / NULLIF(t.TotalPredictions, 0))
+                        ELSE 100.0 - (100.0 * t.AwayWinPredictions / NULLIF(t.TotalPredictions, 0))
+                    END AS RarePoints
+                FROM dbo.Predictions p
+                INNER JOIN dbo.Participants pa ON pa.Id = p.ParticipantId
+                INNER JOIN dbo.Matches m ON m.Id = p.MatchId
+                INNER JOIN MatchPredictionTotals t ON t.MatchId = p.MatchId
+                WHERE m.HomeScore IS NOT NULL
+                  AND m.AwayScore IS NOT NULL
+                  AND p.HomeScore IS NOT NULL
+                  AND p.AwayScore IS NOT NULL
+                  AND SIGN(p.HomeScore - p.AwayScore) = SIGN(m.HomeScore - m.AwayScore)
+            )
+            SELECT TOP (1)
+                Name,
+                CAST(ROUND(SUM(RarePoints), 0) AS INT) AS RarePoints
+            FROM RareHits
+            GROUP BY ParticipantId, Name
+            ORDER BY SUM(RarePoints) DESC, Name ASC;
+            """;
+
         using var connection = connectionFactory.CreateConnection();
         var finalWinner = await connection.QueryFirstOrDefaultAsync<HighlightVoteResponse>(new CommandDefinition(
             finalWinnerSql,
@@ -310,6 +461,12 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
         var exactScoreWizard = await connection.QueryFirstOrDefaultAsync<HighlightExactScoreResponse>(new CommandDefinition(
             exactScoreWizardSql,
             cancellationToken: cancellationToken));
+        var weeklyRise = await connection.QueryFirstOrDefaultAsync<HighlightWeeklyRiseResponse>(new CommandDefinition(
+            weeklyRiseSql,
+            cancellationToken: cancellationToken));
+        var rareProphet = await connection.QueryFirstOrDefaultAsync<HighlightRarePredictionResponse>(new CommandDefinition(
+            rareProphetSql,
+            cancellationToken: cancellationToken));
 
         return Ok(new PublicHighlightsResponse
         {
@@ -319,7 +476,9 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
             MostDividedMatch = mostDividedMatch,
             AlmostExactKing = almostExactKing,
             WeeklySalted = weeklySalted,
-            ExactScoreWizard = exactScoreWizard
+            ExactScoreWizard = exactScoreWizard,
+            WeeklyRise = weeklyRise,
+            RareProphet = rareProphet
         });
     }
 }

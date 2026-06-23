@@ -27,6 +27,7 @@
         <section class="panel public-panel" style="margin-top:10px">
             <div class="acciones acciones-publicas">
                 <button class="btn-secondary" onclick="window.location.href='ranking.html'">Ver resultados</button>
+                <button class="btn-secondary" onclick="window.location.href='resultados-partidos.html'">Resultados de partidos</button>
                 <button class="btn-secondary" onclick="window.location.href='predicciones.html'">Ver predicciones</button>
                 <button class="btn-secondary" onclick="window.location.href='instrucciones_quiniela.html'">Instrucciones</button>
             </div>
@@ -101,6 +102,18 @@
                         <span class="voto-label">El brujo mayor de Catemaco</span>
                         <strong id="exactWizardName">Cargando...</strong>
                         <small id="exactWizardTotal">Calculando marcadores exactos</small>
+                    </article>
+
+                    <article class="voto-card voto-card-phoenix" id="weeklyRiseCard" hidden>
+                        <span class="voto-label">El Ave Fénix</span>
+                        <strong id="weeklyRiseName">Cargando...</strong>
+                        <small id="weeklyRiseTotal">Calculando posiciones subidas</small>
+                    </article>
+
+                    <article class="voto-card voto-card-prophet">
+                        <span class="voto-label">El profeta del 3%</span>
+                        <strong id="rareProphetName">Cargando...</strong>
+                        <small id="rareProphetTotal">Calculando puntos raros</small>
                     </article>
                 </section>
             </div>
