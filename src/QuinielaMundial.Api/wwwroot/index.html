@@ -128,6 +128,21 @@
             </div>
         </section>
     </main>
+
+    <div class="modal-backdrop resultados-modal" id="resultadosParticipantesModal" role="dialog" aria-modal="true" aria-labelledby="resultadosModalTitulo" hidden>
+        <div class="modal-card resultados-modal-card">
+            <div class="modal-header">
+                <div>
+                    <span class="voto-label">Resultados de participantes</span>
+                    <h2 id="resultadosModalTitulo">Partido</h2>
+                    <p id="resultadosModalDetalle" class="resultado-partido-meta"></p>
+                </div>
+                <button class="btn-secondary modal-close" type="button" id="cerrarResultadosModal">Cerrar</button>
+            </div>
+            <div id="resultadosModalContenido" class="resultados-modal-contenido"></div>
+        </div>
+    </div>
+
     <footer class="footer">
         <p>© 2026 Impulso Tecnológico. Todos los derechos reservados.</p>
     </footer>

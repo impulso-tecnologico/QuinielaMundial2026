@@ -622,15 +622,30 @@ button:hover {
 
 .partido-publico {
   height: 100%;
-  grid-template-rows: auto auto auto auto 1fr;
+  grid-template-rows: auto auto auto auto 1fr auto;
 }
 
 .partido-publico .equipos-publicos {
   align-self: center;
 }
 
-.partido-publico .partido-header:last-child {
+.partido-publico .partido-header:last-of-type {
   align-self: end;
+}
+
+.partido-publico .partido-acciones {
+  align-self: end;
+}
+
+.partido-acciones {
+  display: flex;
+  justify-content: flex-start;
+  border-top: 1px solid var(--borde);
+  padding-top: 12px;
+}
+
+.partido-publico .partido-resultados-btn {
+  width: 100%;
 }
 
 .partido.partido-capturado {

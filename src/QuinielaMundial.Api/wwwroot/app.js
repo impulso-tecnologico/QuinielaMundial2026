@@ -26,9 +26,16 @@ const weeklyRiseName = $("#weeklyRiseName");
 const weeklyRiseTotal = $("#weeklyRiseTotal");
 const rareProphetName = $("#rareProphetName");
 const rareProphetTotal = $("#rareProphetTotal");
+const resultadosParticipantesModal = $("#resultadosParticipantesModal");
+const resultadosModalTitulo = $("#resultadosModalTitulo");
+const resultadosModalDetalle = $("#resultadosModalDetalle");
+const resultadosModalContenido = $("#resultadosModalContenido");
+const cerrarResultadosModal = $("#cerrarResultadosModal");
 
 let partidos = [];
 let fechaSeleccionadaHighlights = "";
+const resultadosPorPartido = new Map();
+let partidoModalActual = null;
 
 const ZONA_HORARIA_GUADALAJARA = "America/Mexico_City";
 
@@ -352,8 +359,108 @@ function renderizarPartido(partido) {
       <div class="partido-header">
         <div class="sede">${escaparHtml(partido.estadio)}<br>${escaparHtml(partido.ciudad)}</div>
       </div>
+
+      <div class="partido-acciones">
+        <button class="btn-primary resultado-participantes-btn partido-resultados-btn" type="button" data-match-results="${escaparHtml(partido.id)}">
+          Ver resultados de participantes
+        </button>
+      </div>
     </article>
   `;
+}
+
+function formatearMarcador(local, visitante) {
+  if (local === null || local === undefined || visitante === null || visitante === undefined) return "Sin resultado";
+  return `${local} - ${visitante}`;
+}
+
+function tieneResultado(partido) {
+  return partido?.realLocal !== null && partido?.realLocal !== undefined && partido?.realVisitante !== null && partido?.realVisitante !== undefined;
+}
+
+function obtenerSignoMarcador(local, visitante) {
+  return Math.sign(Number(local) - Number(visitante));
+}
+
+function obtenerClaseResultadoParticipante(resultado, partido) {
+  if (!partido || !tieneResultado(partido)) return "";
+
+  const marcadorExacto = resultado.homeScore === partido.realLocal && resultado.awayScore === partido.realVisitante;
+  if (marcadorExacto) return "resultado-participante-exacto";
+
+  const acertoGanador = obtenerSignoMarcador(resultado.homeScore, resultado.awayScore) === obtenerSignoMarcador(partido.realLocal, partido.realVisitante);
+  return acertoGanador ? "resultado-participante-correcto" : "";
+}
+
+function renderizarTablaParticipantes(resultados, partido) {
+  if (!resultados.length) {
+    return `<div class="placeholder resultados-participantes-empty">Sin resultados guardados por participantes para este partido.</div>`;
+  }
+
+  const filas = resultados.map(resultado => `
+    <tr class="${obtenerClaseResultadoParticipante(resultado, partido)}">
+      <td>${escaparHtml(resultado.participantName)}</td>
+      <td>${escaparHtml(formatearMarcador(resultado.homeScore, resultado.awayScore))}</td>
+    </tr>
+  `).join("");
+
+  return `
+    <div class="ranking-table-wrap resultados-participantes-wrap">
+      <table class="ranking-table resultados-participantes-table">
+        <thead>
+          <tr>
+            <th>Participante</th>
+            <th>Resultado</th>
+          </tr>
+        </thead>
+        <tbody>${filas}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function abrirModalResultados(partido) {
+  if (!resultadosParticipantesModal || !resultadosModalTitulo || !resultadosModalDetalle || !resultadosModalContenido) return;
+
+  partidoModalActual = partido;
+  resultadosModalTitulo.textContent = `Partido ${partido.numero}: ${partido.local} vs ${partido.visitante}`;
+  resultadosModalDetalle.textContent = `${partido.fecha} · ${formatearMarcador(partido.realLocal, partido.realVisitante)}`;
+  resultadosModalContenido.innerHTML = `<div class="placeholder resultados-participantes-empty">Cargando resultados de participantes...</div>`;
+  resultadosParticipantesModal.hidden = false;
+  document.body.classList.add("modal-open");
+  cerrarResultadosModal?.focus();
+}
+
+function cerrarModalResultados() {
+  if (!resultadosParticipantesModal) return;
+
+  resultadosParticipantesModal.hidden = true;
+  document.body.classList.remove("modal-open");
+  partidoModalActual = null;
+}
+
+async function mostrarResultadosParticipantes(boton) {
+  const partidoId = Number(boton.dataset.matchResults);
+  const partido = partidos.find(item => item.id === partidoId);
+  if (!partido) return;
+
+  abrirModalResultados(partido);
+  if (resultadosPorPartido.has(partidoId)) {
+    resultadosModalContenido.innerHTML = renderizarTablaParticipantes(resultadosPorPartido.get(partidoId), partido);
+    return;
+  }
+
+  try {
+    const resultados = await apiJson(`/api/matches/${partidoId}/participant-results`);
+    resultadosPorPartido.set(partidoId, resultados);
+    if (partidoModalActual?.id === partidoId) {
+      resultadosModalContenido.innerHTML = renderizarTablaParticipantes(resultados, partido);
+    }
+  } catch (error) {
+    if (partidoModalActual?.id === partidoId) {
+      resultadosModalContenido.innerHTML = `<div class="placeholder resultados-participantes-empty">${escaparHtml(error.message)}</div>`;
+    }
+  }
 }
 
 function renderizarPorcentajesPronosticos(partido) {
@@ -389,6 +496,7 @@ async function cargarPartidos() {
     apiJson("/api/matches/prediction-percentages")
   ]);
   const porcentajesPorPartido = crearMapaPorcentajesPronosticos(porcentajes);
+  resultadosPorPartido.clear();
   partidos = data.map(partido => mapearPartido(partido, porcentajesPorPartido));
   const seleccion = seleccionarPartidosPorFecha(partidos);
   fechaSeleccionadaHighlights = seleccion.fecha || "";
@@ -669,5 +777,19 @@ async function iniciar() {
 
   window.QuinielaLoader?.hide();
 }
+
+contenedorPartidos?.addEventListener("click", event => {
+  const boton = event.target.closest("[data-match-results]");
+  if (!boton) return;
+  mostrarResultadosParticipantes(boton);
+});
+
+cerrarResultadosModal?.addEventListener("click", cerrarModalResultados);
+resultadosParticipantesModal?.addEventListener("click", event => {
+  if (event.target === resultadosParticipantesModal) cerrarModalResultados();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !resultadosParticipantesModal?.hidden) cerrarModalResultados();
+});
 
 iniciar();
