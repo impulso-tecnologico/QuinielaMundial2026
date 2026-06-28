@@ -385,6 +385,10 @@ function obtenerSignoMarcador(local, visitante) {
 function obtenerClaseResultadoParticipante(resultado, partido) {
   if (!partido || !tieneResultado(partido)) return "";
 
+  if (resultado.isKnockout && resultado.correctBracket === false) {
+    return "resultado-participante-cruce-incorrecto";
+  }
+
   const marcadorExacto = resultado.homeScore === partido.realLocal && resultado.awayScore === partido.realVisitante;
   if (marcadorExacto) return "resultado-participante-exacto";
 

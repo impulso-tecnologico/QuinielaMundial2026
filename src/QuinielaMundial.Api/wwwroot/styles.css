@@ -22,6 +22,87 @@ body {
   color: var(--texto);
 }
 
+body.maintenance-active {
+  overflow: hidden;
+}
+
+.maintenance-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 18% 16%, rgba(71, 199, 199, 0.28) 0 120px, transparent 260px),
+    radial-gradient(circle at 82% 78%, rgba(36, 111, 194, 0.24) 0 140px, transparent 300px),
+    linear-gradient(135deg, #f8fbff 0%, #eef7f5 48%, #ffffff 100%);
+}
+
+.maintenance-card {
+  width: min(620px, 100%);
+  padding: clamp(28px, 5vw, 52px);
+  border: 1px solid rgba(36, 111, 194, 0.18);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 28px 80px rgba(16, 24, 40, 0.18);
+  text-align: center;
+}
+
+.maintenance-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: #e7f6ee;
+  color: var(--verde-oscuro);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.maintenance-card h1 {
+  margin: 0;
+  color: #10182c;
+  font-size: clamp(34px, 7vw, 64px);
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+}
+
+.maintenance-card p {
+  max-width: 520px;
+  margin: 22px auto 0;
+  color: #2d3e59;
+  font-size: clamp(16px, 2vw, 19px);
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.maintenance-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  padding: 12px 15px;
+  border: 1px solid #d9e5fb;
+  border-radius: 16px;
+  background: #f8fbff;
+  color: #246fc2;
+  font-size: 14px;
+}
+
+.maintenance-status span {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #246fc2;
+  box-shadow: 0 0 0 6px rgba(36, 111, 194, 0.12);
+}
+
 .page-loader {
   position: fixed;
   inset: 0;
@@ -769,8 +850,14 @@ button:hover {
   color: #8a5a00;
 }
 
+.resultados-participantes-table tr.resultado-participante-cruce-incorrecto td {
+  background: #ffe8e8;
+  color: #a11218;
+}
+
 .resultados-participantes-table tr.resultado-participante-correcto td:first-child,
-.resultados-participantes-table tr.resultado-participante-exacto td:first-child {
+.resultados-participantes-table tr.resultado-participante-exacto td:first-child,
+.resultados-participantes-table tr.resultado-participante-cruce-incorrecto td:first-child {
   font-weight: 900;
 }
 

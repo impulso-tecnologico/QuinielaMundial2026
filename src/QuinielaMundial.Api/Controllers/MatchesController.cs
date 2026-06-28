@@ -95,15 +95,21 @@ public sealed class MatchesController(ISqlConnectionFactory connectionFactory) :
         const string sql = """
             WITH MatchInfo AS
             (
-                SELECT Id, BracketMatchNumber
-                FROM dbo.Matches
-                WHERE Id = @MatchId
+                SELECT
+                    m.Id,
+                    m.BracketMatchNumber,
+                    m.HomeTeamId,
+                    m.AwayTeamId
+                FROM dbo.Matches m
+                WHERE m.Id = @MatchId
             ), Results AS
             (
                 SELECT
                     pa.Name AS ParticipantName,
                     p.HomeScore,
-                    p.AwayScore
+                    p.AwayScore,
+                    CAST(0 AS bit) AS IsKnockout,
+                    CAST(NULL AS bit) AS CorrectBracket
                 FROM MatchInfo mi
                 INNER JOIN dbo.Predictions p
                     ON mi.BracketMatchNumber IS NULL
@@ -117,16 +123,29 @@ public sealed class MatchesController(ISqlConnectionFactory connectionFactory) :
                 SELECT
                     pa.Name AS ParticipantName,
                     kp.HomeScore,
-                    kp.AwayScore
+                    kp.AwayScore,
+                    CAST(1 AS bit) AS IsKnockout,
+                    CAST(
+                        CASE
+                            WHEN mi.HomeTeamId IS NULL OR mi.AwayTeamId IS NULL THEN NULL
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId = mi.HomeTeamId
+                             AND pkb.AwayTeamId = mi.AwayTeamId THEN 1
+                            ELSE 0
+                        END AS bit
+                    ) AS CorrectBracket
                 FROM MatchInfo mi
                 INNER JOIN dbo.KnockoutPredictions kp
                     ON mi.BracketMatchNumber IS NOT NULL
                    AND kp.BracketMatchNumber = mi.BracketMatchNumber
                 INNER JOIN dbo.Participants pa ON pa.Id = kp.ParticipantId
+                LEFT JOIN dbo.ParticipantKnockoutBrackets pkb
+                    ON pkb.ParticipantId = kp.ParticipantId
+                   AND pkb.BracketMatchNumber = mi.BracketMatchNumber
                 WHERE kp.HomeScore IS NOT NULL
                   AND kp.AwayScore IS NOT NULL
             )
-            SELECT ParticipantName, HomeScore, AwayScore
+            SELECT ParticipantName, HomeScore, AwayScore, IsKnockout, CorrectBracket
             FROM Results
             ORDER BY ParticipantName;
             """;
