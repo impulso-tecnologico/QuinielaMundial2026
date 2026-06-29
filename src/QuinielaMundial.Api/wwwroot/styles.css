@@ -1083,6 +1083,17 @@ button:hover {
   text-align: center;
 }
 
+.porcentaje-cruce {
+  grid-column: 1 / -1;
+  padding-top: 9px;
+  border-top: 1px solid #d9e5fb;
+  text-align: center;
+}
+
+.porcentaje-cruce strong {
+  color: #246fc2;
+}
+
 .porcentaje-opcion span {
   color: var(--muted);
   font-size: 11px;

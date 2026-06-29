@@ -383,11 +383,13 @@ function obtenerSignoMarcador(local, visitante) {
 }
 
 function obtenerClaseResultadoParticipante(resultado, partido) {
-  if (!partido || !tieneResultado(partido)) return "";
+  if (!partido) return "";
 
   if (resultado.isKnockout && resultado.correctBracket === false) {
     return "resultado-participante-cruce-incorrecto";
   }
+
+  if (!tieneResultado(partido)) return "";
 
   const marcadorExacto = resultado.homeScore === partido.realLocal && resultado.awayScore === partido.realVisitante;
   if (marcadorExacto) return "resultado-participante-exacto";
@@ -469,12 +471,14 @@ async function mostrarResultadosParticipantes(boton) {
 
 function renderizarPorcentajesPronosticos(partido) {
   const porcentajes = partido.porcentajesPronosticos;
-  if (!porcentajes?.totalPredictions) {
+  const totalPronosticos = Number(porcentajes?.totalPredictions) || 0;
+  const totalCruces = Number(porcentajes?.totalBracketPredictions) || 0;
+
+  if (!porcentajes || (totalPronosticos <= 0 && totalCruces <= 0)) {
     return `<div class="porcentajes-pronosticos sin-pronosticos">Sin pronósticos registrados</div>`;
   }
 
-  return `
-    <div class="porcentajes-pronosticos" aria-label="Porcentajes de pronósticos">
+  const porcentajesResultado = totalPronosticos > 0 ? `
       <div class="porcentaje-opcion porcentaje-local">
         <span>Gana ${escaparHtml(partido.local)}</span>
         <strong>${escaparHtml(porcentajes.homeWinPercentage)}%</strong>
@@ -487,7 +491,28 @@ function renderizarPorcentajesPronosticos(partido) {
         <span>Gana ${escaparHtml(partido.visitante)}</span>
         <strong>${escaparHtml(porcentajes.awayWinPercentage)}%</strong>
       </div>
-      <small>${escaparHtml(porcentajes.totalPredictions)} pronóstico${porcentajes.totalPredictions === 1 ? "" : "s"}</small>
+  ` : "";
+
+  const porcentajeCruce = totalCruces > 0 ? `
+      <div class="porcentaje-opcion porcentaje-cruce">
+        <span>Acertaron el cruce</span>
+        <strong>${escaparHtml(porcentajes.correctBracketPercentage)}%</strong>
+      </div>
+  ` : "";
+
+  const detallePronosticos = [];
+  if (totalPronosticos > 0) {
+    detallePronosticos.push(`${totalPronosticos} pronóstico${totalPronosticos === 1 ? "" : "s"}`);
+  }
+  if (totalCruces > 0) {
+    detallePronosticos.push(`${totalCruces} cruce${totalCruces === 1 ? "" : "s"} guardado${totalCruces === 1 ? "" : "s"}`);
+  }
+
+  return `
+    <div class="porcentajes-pronosticos" aria-label="Porcentajes de pronósticos">
+      ${porcentajesResultado}
+      ${porcentajeCruce}
+      <small>${escaparHtml(detallePronosticos.join(" · "))}</small>
     </div>
   `;
 }

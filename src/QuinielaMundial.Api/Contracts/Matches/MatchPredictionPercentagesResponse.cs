@@ -10,4 +10,7 @@ public sealed class MatchPredictionPercentagesResponse
     public int HomeWinPercentage { get; set; }
     public int DrawPercentage { get; set; }
     public int AwayWinPercentage { get; set; }
+    public int TotalBracketPredictions { get; set; }
+    public int CorrectBracketPredictions { get; set; }
+    public int CorrectBracketPercentage { get; set; }
 }

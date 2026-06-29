@@ -13,7 +13,79 @@ public sealed class MatchesController(ISqlConnectionFactory connectionFactory) :
     public async Task<ActionResult<IReadOnlyList<MatchPredictionPercentagesResponse>>> GetPredictionPercentages(CancellationToken cancellationToken)
     {
         const string sql = """
-            WITH Totals AS
+            WITH RegularVotes AS
+            (
+                SELECT
+                    m.Id AS MatchId,
+                    p.HomeScore,
+                    p.AwayScore
+                FROM dbo.Matches m
+                INNER JOIN dbo.Predictions p ON p.MatchId = m.Id
+                WHERE m.StageId = 1
+                  AND p.HomeScore IS NOT NULL
+                  AND p.AwayScore IS NOT NULL
+            ), KnockoutVotes AS
+            (
+                SELECT
+                    m.Id AS MatchId,
+                    normalized.HomeScore,
+                    normalized.AwayScore
+                FROM dbo.Matches m
+                INNER JOIN dbo.KnockoutPredictions kp ON kp.BracketMatchNumber = m.BracketMatchNumber
+                LEFT JOIN dbo.ParticipantKnockoutBrackets pkb
+                    ON pkb.ParticipantId = kp.ParticipantId
+                   AND pkb.BracketMatchNumber = m.BracketMatchNumber
+                CROSS APPLY
+                (
+                    SELECT
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.HomeTeamId
+                             AND pkb.AwayTeamId = m.AwayTeamId THEN kp.HomeScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.AwayTeamId
+                             AND pkb.AwayTeamId = m.HomeTeamId THEN kp.AwayScore
+                            ELSE NULL
+                        END AS HomeScore,
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.HomeTeamId
+                             AND pkb.AwayTeamId = m.AwayTeamId THEN kp.AwayScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.AwayTeamId
+                             AND pkb.AwayTeamId = m.HomeTeamId THEN kp.HomeScore
+                            ELSE NULL
+                        END AS AwayScore
+                ) normalized
+                WHERE m.StageId > 1
+                  AND kp.HomeScore IS NOT NULL
+                  AND kp.AwayScore IS NOT NULL
+                  AND normalized.HomeScore IS NOT NULL
+                  AND normalized.AwayScore IS NOT NULL
+            ), PredictionVotes AS
+            (
+                SELECT MatchId, HomeScore, AwayScore FROM RegularVotes
+
+                UNION ALL
+
+                SELECT MatchId, HomeScore, AwayScore FROM KnockoutVotes
+            ), PredictionTotals AS
             (
                 SELECT
                     MatchId,
@@ -21,22 +93,47 @@ public sealed class MatchesController(ISqlConnectionFactory connectionFactory) :
                     SUM(CASE WHEN HomeScore > AwayScore THEN 1 ELSE 0 END) AS HomeWinPredictions,
                     SUM(CASE WHEN HomeScore = AwayScore THEN 1 ELSE 0 END) AS DrawPredictions,
                     SUM(CASE WHEN AwayScore > HomeScore THEN 1 ELSE 0 END) AS AwayWinPredictions
-                FROM dbo.Predictions
-                WHERE HomeScore IS NOT NULL
-                  AND AwayScore IS NOT NULL
+                FROM PredictionVotes
                 GROUP BY MatchId
+            ), BracketTotals AS
+            (
+                SELECT
+                    m.Id AS MatchId,
+                    COUNT(1) AS TotalBracketPredictions,
+                    SUM(
+                        CASE
+                            WHEN pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND (
+                                (pkb.HomeTeamId = m.HomeTeamId AND pkb.AwayTeamId = m.AwayTeamId)
+                                OR (pkb.HomeTeamId = m.AwayTeamId AND pkb.AwayTeamId = m.HomeTeamId)
+                             ) THEN 1
+                            ELSE 0
+                        END
+                    ) AS CorrectBracketPredictions
+                FROM dbo.Matches m
+                INNER JOIN dbo.ParticipantKnockoutBrackets pkb
+                    ON pkb.BracketMatchNumber = m.BracketMatchNumber
+                WHERE m.StageId > 1
+                GROUP BY m.Id
             )
             SELECT
-                MatchId,
-                TotalPredictions,
-                HomeWinPredictions,
-                DrawPredictions,
-                AwayWinPredictions,
-                CAST(ROUND(100.0 * HomeWinPredictions / NULLIF(TotalPredictions, 0), 0) AS INT) AS HomeWinPercentage,
-                CAST(ROUND(100.0 * DrawPredictions / NULLIF(TotalPredictions, 0), 0) AS INT) AS DrawPercentage,
-                CAST(ROUND(100.0 * AwayWinPredictions / NULLIF(TotalPredictions, 0), 0) AS INT) AS AwayWinPercentage
-            FROM Totals
-            ORDER BY MatchId;
+                COALESCE(pt.MatchId, bt.MatchId) AS MatchId,
+                COALESCE(pt.TotalPredictions, 0) AS TotalPredictions,
+                COALESCE(pt.HomeWinPredictions, 0) AS HomeWinPredictions,
+                COALESCE(pt.DrawPredictions, 0) AS DrawPredictions,
+                COALESCE(pt.AwayWinPredictions, 0) AS AwayWinPredictions,
+                COALESCE(CAST(ROUND(100.0 * COALESCE(pt.HomeWinPredictions, 0) / NULLIF(pt.TotalPredictions, 0), 0) AS INT), 0) AS HomeWinPercentage,
+                COALESCE(CAST(ROUND(100.0 * COALESCE(pt.DrawPredictions, 0) / NULLIF(pt.TotalPredictions, 0), 0) AS INT), 0) AS DrawPercentage,
+                COALESCE(CAST(ROUND(100.0 * COALESCE(pt.AwayWinPredictions, 0) / NULLIF(pt.TotalPredictions, 0), 0) AS INT), 0) AS AwayWinPercentage,
+                COALESCE(bt.TotalBracketPredictions, 0) AS TotalBracketPredictions,
+                COALESCE(bt.CorrectBracketPredictions, 0) AS CorrectBracketPredictions,
+                COALESCE(CAST(ROUND(100.0 * COALESCE(bt.CorrectBracketPredictions, 0) / NULLIF(bt.TotalBracketPredictions, 0), 0) AS INT), 0) AS CorrectBracketPercentage
+            FROM PredictionTotals pt
+            FULL OUTER JOIN BracketTotals bt ON bt.MatchId = pt.MatchId
+            ORDER BY COALESCE(pt.MatchId, bt.MatchId);
             """;
 
         using var connection = connectionFactory.CreateConnection();
@@ -126,15 +223,21 @@ public sealed class MatchesController(ISqlConnectionFactory connectionFactory) :
                     COALESCE(normalized.HomeScore, kp.HomeScore) AS HomeScore,
                     COALESCE(normalized.AwayScore, kp.AwayScore) AS AwayScore,
                     CAST(1 AS bit) AS IsKnockout,
-                    CAST(CASE WHEN normalized.HomeScore IS NOT NULL AND normalized.AwayScore IS NOT NULL THEN 1 ELSE 0 END AS bit) AS CorrectBracket
+                    CAST(
+                        CASE
+                            WHEN mi.HomeTeamId IS NULL OR mi.AwayTeamId IS NULL THEN NULL
+                            WHEN normalized.CorrectBracket = 1 THEN 1
+                            ELSE 0
+                        END AS bit
+                    ) AS CorrectBracket
                 FROM MatchInfo mi
-                INNER JOIN dbo.KnockoutPredictions kp
+                INNER JOIN dbo.ParticipantKnockoutBrackets pkb
                     ON mi.StageId > 1
-                   AND kp.BracketMatchNumber = mi.BracketMatchNumber
-                INNER JOIN dbo.Participants pa ON pa.Id = kp.ParticipantId
-                LEFT JOIN dbo.ParticipantKnockoutBrackets pkb
-                    ON pkb.ParticipantId = kp.ParticipantId
                    AND pkb.BracketMatchNumber = mi.BracketMatchNumber
+                INNER JOIN dbo.Participants pa ON pa.Id = pkb.ParticipantId
+                LEFT JOIN dbo.KnockoutPredictions kp
+                    ON kp.ParticipantId = pkb.ParticipantId
+                   AND kp.BracketMatchNumber = mi.BracketMatchNumber
                 CROSS APPLY
                 (
                     SELECT
@@ -171,10 +274,20 @@ public sealed class MatchesController(ISqlConnectionFactory connectionFactory) :
                              AND pkb.HomeTeamId = mi.AwayTeamId
                              AND pkb.AwayTeamId = mi.HomeTeamId THEN kp.HomeScore
                             ELSE NULL
-                        END AS AwayScore
+                        END AS AwayScore,
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND mi.HomeTeamId IS NOT NULL
+                             AND mi.AwayTeamId IS NOT NULL
+                             AND (
+                                (pkb.HomeTeamId = mi.HomeTeamId AND pkb.AwayTeamId = mi.AwayTeamId)
+                                OR (pkb.HomeTeamId = mi.AwayTeamId AND pkb.AwayTeamId = mi.HomeTeamId)
+                             ) THEN 1
+                            ELSE 0
+                        END AS CorrectBracket
                 ) normalized
-                WHERE kp.HomeScore IS NOT NULL
-                  AND kp.AwayScore IS NOT NULL
             )
             SELECT ParticipantName, HomeScore, AwayScore, IsKnockout, CorrectBracket
             FROM Results

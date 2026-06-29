@@ -64,6 +64,7 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                             WHERE p.MatchId = m.Id
                               AND p.HomeScore IS NOT NULL
                               AND p.AwayScore IS NOT NULL
+                              AND m.StageId = 1
                         )
                            OR EXISTS
                         (
@@ -72,6 +73,7 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                             WHERE kp.BracketMatchNumber = m.BracketMatchNumber
                               AND kp.HomeScore IS NOT NULL
                               AND kp.AwayScore IS NOT NULL
+                              AND m.StageId > 1
                         )
                     )
                 ) AS MatchDay
@@ -83,16 +85,61 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                 CROSS JOIN SelectedDay sd
                 WHERE p.HomeScore IS NOT NULL
                   AND p.AwayScore IS NOT NULL
+                  AND m.StageId = 1
                   AND CONVERT(date, m.MatchDate) = sd.MatchDay
 
                 UNION ALL
 
-                SELECT kp.HomeScore, kp.AwayScore
-                FROM dbo.KnockoutPredictions kp
-                INNER JOIN dbo.Matches m ON m.BracketMatchNumber = kp.BracketMatchNumber
+                SELECT
+                    COALESCE(normalized.HomeScore, kp.HomeScore) AS HomeScore,
+                    COALESCE(normalized.AwayScore, kp.AwayScore) AS AwayScore
+                FROM dbo.Matches m
+                INNER JOIN dbo.KnockoutPredictions kp ON kp.BracketMatchNumber = m.BracketMatchNumber
+                LEFT JOIN dbo.ParticipantKnockoutBrackets pkb
+                    ON pkb.ParticipantId = kp.ParticipantId
+                   AND pkb.BracketMatchNumber = m.BracketMatchNumber
+                CROSS APPLY
+                (
+                    SELECT
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.HomeTeamId
+                             AND pkb.AwayTeamId = m.AwayTeamId THEN kp.HomeScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.AwayTeamId
+                             AND pkb.AwayTeamId = m.HomeTeamId THEN kp.AwayScore
+                            ELSE NULL
+                        END AS HomeScore,
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.HomeTeamId
+                             AND pkb.AwayTeamId = m.AwayTeamId THEN kp.AwayScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.AwayTeamId
+                             AND pkb.AwayTeamId = m.HomeTeamId THEN kp.HomeScore
+                            ELSE NULL
+                        END AS AwayScore
+                ) normalized
                 CROSS JOIN SelectedDay sd
                 WHERE kp.HomeScore IS NOT NULL
                   AND kp.AwayScore IS NOT NULL
+                  AND m.StageId > 1
                   AND CONVERT(date, m.MatchDate) = sd.MatchDay
             )
             SELECT TOP (1)
@@ -118,20 +165,28 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                             WHERE p.MatchId = m.Id
                               AND p.HomeScore IS NOT NULL
                               AND p.AwayScore IS NOT NULL
+                              AND m.StageId = 1
+                        )
+                           OR EXISTS
+                        (
+                            SELECT 1
+                            FROM dbo.KnockoutPredictions kp
+                            WHERE kp.BracketMatchNumber = m.BracketMatchNumber
+                              AND kp.HomeScore IS NOT NULL
+                              AND kp.AwayScore IS NOT NULL
+                              AND m.StageId > 1
                         )
                     )
                 ) AS MatchDay
-            ), MatchVotes AS
+            ), PredictionVotes AS
             (
                 SELECT
                     m.Id,
                     m.MatchNumber,
                     COALESCE(ht.Name, m.HomePlaceholder) AS HomeTeam,
                     COALESCE(at.Name, m.AwayPlaceholder) AS AwayTeam,
-                    COUNT(1) AS Predictions,
-                    SUM(CASE WHEN p.HomeScore > p.AwayScore THEN 1 ELSE 0 END) AS HomeVotes,
-                    SUM(CASE WHEN p.HomeScore = p.AwayScore THEN 1 ELSE 0 END) AS DrawVotes,
-                    SUM(CASE WHEN p.AwayScore > p.HomeScore THEN 1 ELSE 0 END) AS AwayVotes
+                    p.HomeScore,
+                    p.AwayScore
                 FROM dbo.Matches m
                 INNER JOIN dbo.Predictions p ON p.MatchId = m.Id
                 LEFT JOIN dbo.Teams ht ON ht.Id = m.HomeTeamId
@@ -139,8 +194,81 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                 CROSS JOIN SelectedDay sd
                 WHERE p.HomeScore IS NOT NULL
                   AND p.AwayScore IS NOT NULL
+                  AND m.StageId = 1
                   AND CONVERT(date, m.MatchDate) = sd.MatchDay
-                GROUP BY m.Id, m.MatchNumber, COALESCE(ht.Name, m.HomePlaceholder), COALESCE(at.Name, m.AwayPlaceholder)
+
+                UNION ALL
+
+                SELECT
+                    m.Id,
+                    m.MatchNumber,
+                    COALESCE(ht.Name, m.HomePlaceholder) AS HomeTeam,
+                    COALESCE(at.Name, m.AwayPlaceholder) AS AwayTeam,
+                    COALESCE(normalized.HomeScore, kp.HomeScore) AS HomeScore,
+                    COALESCE(normalized.AwayScore, kp.AwayScore) AS AwayScore
+                FROM dbo.Matches m
+                INNER JOIN dbo.KnockoutPredictions kp ON kp.BracketMatchNumber = m.BracketMatchNumber
+                LEFT JOIN dbo.ParticipantKnockoutBrackets pkb
+                    ON pkb.ParticipantId = kp.ParticipantId
+                   AND pkb.BracketMatchNumber = m.BracketMatchNumber
+                LEFT JOIN dbo.Teams ht ON ht.Id = m.HomeTeamId
+                LEFT JOIN dbo.Teams at ON at.Id = m.AwayTeamId
+                CROSS APPLY
+                (
+                    SELECT
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.HomeTeamId
+                             AND pkb.AwayTeamId = m.AwayTeamId THEN kp.HomeScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.AwayTeamId
+                             AND pkb.AwayTeamId = m.HomeTeamId THEN kp.AwayScore
+                            ELSE NULL
+                        END AS HomeScore,
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.HomeTeamId
+                             AND pkb.AwayTeamId = m.AwayTeamId THEN kp.AwayScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.AwayTeamId
+                             AND pkb.AwayTeamId = m.HomeTeamId THEN kp.HomeScore
+                            ELSE NULL
+                        END AS AwayScore
+                ) normalized
+                CROSS JOIN SelectedDay sd
+                WHERE kp.HomeScore IS NOT NULL
+                  AND kp.AwayScore IS NOT NULL
+                  AND m.StageId > 1
+                  AND CONVERT(date, m.MatchDate) = sd.MatchDay
+            ), MatchVotes AS
+            (
+                SELECT
+                    Id,
+                    MatchNumber,
+                    HomeTeam,
+                    AwayTeam,
+                    COUNT(1) AS Predictions,
+                    SUM(CASE WHEN HomeScore > AwayScore THEN 1 ELSE 0 END) AS HomeVotes,
+                    SUM(CASE WHEN HomeScore = AwayScore THEN 1 ELSE 0 END) AS DrawVotes,
+                    SUM(CASE WHEN AwayScore > HomeScore THEN 1 ELSE 0 END) AS AwayVotes
+                FROM PredictionVotes
+                GROUP BY Id, MatchNumber, HomeTeam, AwayTeam
             ), Totals AS
             (
                 SELECT
@@ -625,40 +753,102 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
             """;
 
         const string rareProphetSql = """
-            WITH MatchPredictionTotals AS
+            WITH PredictionVotes AS
             (
                 SELECT
-                    p.MatchId AS MatchId,
+                    m.Id AS MatchId,
+                    p.ParticipantId,
+                    p.HomeScore,
+                    p.AwayScore,
+                    CAST(1 AS bit) AS CountsForHit
+                FROM dbo.Matches m
+                INNER JOIN dbo.Predictions p ON p.MatchId = m.Id
+                WHERE m.StageId = 1
+                  AND p.HomeScore IS NOT NULL
+                  AND p.AwayScore IS NOT NULL
+
+                UNION ALL
+
+                SELECT
+                    m.Id AS MatchId,
+                    kp.ParticipantId,
+                    COALESCE(normalized.HomeScore, kp.HomeScore) AS HomeScore,
+                    COALESCE(normalized.AwayScore, kp.AwayScore) AS AwayScore,
+                    CAST(CASE WHEN normalized.HomeScore IS NOT NULL AND normalized.AwayScore IS NOT NULL THEN 1 ELSE 0 END AS bit) AS CountsForHit
+                FROM dbo.Matches m
+                INNER JOIN dbo.KnockoutPredictions kp ON kp.BracketMatchNumber = m.BracketMatchNumber
+                LEFT JOIN dbo.ParticipantKnockoutBrackets pkb
+                    ON pkb.ParticipantId = kp.ParticipantId
+                   AND pkb.BracketMatchNumber = m.BracketMatchNumber
+                CROSS APPLY
+                (
+                    SELECT
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.HomeTeamId
+                             AND pkb.AwayTeamId = m.AwayTeamId THEN kp.HomeScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.AwayTeamId
+                             AND pkb.AwayTeamId = m.HomeTeamId THEN kp.AwayScore
+                            ELSE NULL
+                        END AS HomeScore,
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.HomeTeamId
+                             AND pkb.AwayTeamId = m.AwayTeamId THEN kp.AwayScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.AwayTeamId
+                             AND pkb.AwayTeamId = m.HomeTeamId THEN kp.HomeScore
+                            ELSE NULL
+                        END AS AwayScore
+                ) normalized
+                WHERE m.StageId > 1
+                  AND kp.HomeScore IS NOT NULL
+                  AND kp.AwayScore IS NOT NULL
+            ), MatchPredictionTotals AS
+            (
+                SELECT
+                    MatchId,
                     COUNT(1) AS TotalPredictions,
                     SUM(CASE WHEN HomeScore > AwayScore THEN 1 ELSE 0 END) AS HomeWinPredictions,
                     SUM(CASE WHEN HomeScore = AwayScore THEN 1 ELSE 0 END) AS DrawPredictions,
                     SUM(CASE WHEN AwayScore > HomeScore THEN 1 ELSE 0 END) AS AwayWinPredictions
-                FROM dbo.Predictions p
-                INNER JOIN dbo.Matches m ON m.Id = p.MatchId
-                WHERE p.HomeScore IS NOT NULL
-                  AND p.AwayScore IS NOT NULL
-                  AND m.StageId = 1
-                GROUP BY p.MatchId
+                FROM PredictionVotes
+                GROUP BY MatchId
             ), RareHits AS
             (
                 SELECT
-                    p.ParticipantId,
+                    pv.ParticipantId,
                     pa.Name,
                     CASE
                         WHEN SIGN(m.HomeScore - m.AwayScore) = 1 THEN 100.0 - (100.0 * t.HomeWinPredictions / NULLIF(t.TotalPredictions, 0))
                         WHEN SIGN(m.HomeScore - m.AwayScore) = 0 THEN 100.0 - (100.0 * t.DrawPredictions / NULLIF(t.TotalPredictions, 0))
                         ELSE 100.0 - (100.0 * t.AwayWinPredictions / NULLIF(t.TotalPredictions, 0))
                     END AS RarePoints
-                FROM dbo.Predictions p
-                INNER JOIN dbo.Participants pa ON pa.Id = p.ParticipantId
-                INNER JOIN dbo.Matches m ON m.Id = p.MatchId
-                INNER JOIN MatchPredictionTotals t ON t.MatchId = p.MatchId
+                FROM PredictionVotes pv
+                INNER JOIN dbo.Participants pa ON pa.Id = pv.ParticipantId
+                INNER JOIN dbo.Matches m ON m.Id = pv.MatchId
+                INNER JOIN MatchPredictionTotals t ON t.MatchId = pv.MatchId
                 WHERE m.HomeScore IS NOT NULL
                   AND m.AwayScore IS NOT NULL
-                  AND m.StageId = 1
-                  AND p.HomeScore IS NOT NULL
-                  AND p.AwayScore IS NOT NULL
-                  AND SIGN(p.HomeScore - p.AwayScore) = SIGN(m.HomeScore - m.AwayScore)
+                  AND pv.CountsForHit = 1
+                  AND SIGN(pv.HomeScore - pv.AwayScore) = SIGN(m.HomeScore - m.AwayScore)
             )
             SELECT TOP (1)
                 Name,
