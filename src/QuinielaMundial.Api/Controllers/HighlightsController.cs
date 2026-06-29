@@ -173,6 +173,7 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                 INNER JOIN dbo.Matches m ON m.Id = p.MatchId
                 WHERE m.HomeScore IS NOT NULL
                   AND m.AwayScore IS NOT NULL
+                  AND m.StageId = 1
                   AND p.HomeScore IS NOT NULL
                   AND p.AwayScore IS NOT NULL
                   AND ABS(p.HomeScore - m.HomeScore) + ABS(p.AwayScore - m.AwayScore) = 1
@@ -185,11 +186,55 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                 FROM dbo.KnockoutPredictions kp
                 INNER JOIN dbo.Participants pa ON pa.Id = kp.ParticipantId
                 INNER JOIN dbo.Matches m ON m.BracketMatchNumber = kp.BracketMatchNumber
+                LEFT JOIN dbo.ParticipantKnockoutBrackets pkb
+                    ON pkb.ParticipantId = kp.ParticipantId
+                   AND pkb.BracketMatchNumber = m.BracketMatchNumber
+                CROSS APPLY
+                (
+                    SELECT
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.HomeTeamId
+                             AND pkb.AwayTeamId = m.AwayTeamId THEN kp.HomeScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.AwayTeamId
+                             AND pkb.AwayTeamId = m.HomeTeamId THEN kp.AwayScore
+                            ELSE NULL
+                        END AS HomeScore,
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.HomeTeamId
+                             AND pkb.AwayTeamId = m.AwayTeamId THEN kp.AwayScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.AwayTeamId
+                             AND pkb.AwayTeamId = m.HomeTeamId THEN kp.HomeScore
+                            ELSE NULL
+                        END AS AwayScore
+                ) normalized
                 WHERE m.HomeScore IS NOT NULL
                   AND m.AwayScore IS NOT NULL
+                  AND m.StageId > 1
                   AND kp.HomeScore IS NOT NULL
                   AND kp.AwayScore IS NOT NULL
-                  AND ABS(kp.HomeScore - m.HomeScore) + ABS(kp.AwayScore - m.AwayScore) = 1
+                  AND normalized.HomeScore IS NOT NULL
+                  AND normalized.AwayScore IS NOT NULL
+                  AND ABS(normalized.HomeScore - m.HomeScore) + ABS(normalized.AwayScore - m.AwayScore) = 1
             )
             SELECT TOP (1)
                 Name,
@@ -218,6 +263,9 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                 SELECT
                     m.Id,
                     m.BracketMatchNumber,
+                    m.StageId,
+                    m.HomeTeamId,
+                    m.AwayTeamId,
                     m.HomeScore,
                     m.AwayScore
                 FROM dbo.Matches m
@@ -249,7 +297,7 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                 LEFT JOIN dbo.Predictions p
                     ON p.ParticipantId = pa.Id
                    AND p.MatchId = wm.Id
-                WHERE wm.BracketMatchNumber IS NULL
+                WHERE wm.StageId = 1
             ), KnockoutScores AS
             (
                 SELECT
@@ -259,7 +307,9 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                         WHEN kp.Id IS NOT NULL
                              AND kp.HomeScore IS NOT NULL
                              AND kp.AwayScore IS NOT NULL
-                             AND SIGN(kp.HomeScore - kp.AwayScore) = SIGN(wm.HomeScore - wm.AwayScore) THEN 1
+                             AND normalized.HomeScore IS NOT NULL
+                             AND normalized.AwayScore IS NOT NULL
+                             AND SIGN(normalized.HomeScore - normalized.AwayScore) = SIGN(wm.HomeScore - wm.AwayScore) THEN 1
                         ELSE 0
                     END AS CorrectPrediction,
                     CASE
@@ -273,7 +323,48 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                 LEFT JOIN dbo.KnockoutPredictions kp
                     ON kp.ParticipantId = pa.Id
                    AND kp.BracketMatchNumber = wm.BracketMatchNumber
-                WHERE wm.BracketMatchNumber IS NOT NULL
+                LEFT JOIN dbo.ParticipantKnockoutBrackets pkb
+                    ON pkb.ParticipantId = pa.Id
+                   AND pkb.BracketMatchNumber = wm.BracketMatchNumber
+                CROSS APPLY
+                (
+                    SELECT
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND wm.HomeTeamId IS NOT NULL
+                             AND wm.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = wm.HomeTeamId
+                             AND pkb.AwayTeamId = wm.AwayTeamId THEN kp.HomeScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND wm.HomeTeamId IS NOT NULL
+                             AND wm.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = wm.AwayTeamId
+                             AND pkb.AwayTeamId = wm.HomeTeamId THEN kp.AwayScore
+                            ELSE NULL
+                        END AS HomeScore,
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND wm.HomeTeamId IS NOT NULL
+                             AND wm.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = wm.HomeTeamId
+                             AND pkb.AwayTeamId = wm.AwayTeamId THEN kp.AwayScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND wm.HomeTeamId IS NOT NULL
+                             AND wm.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = wm.AwayTeamId
+                             AND pkb.AwayTeamId = wm.HomeTeamId THEN kp.HomeScore
+                            ELSE NULL
+                        END AS AwayScore
+                ) normalized
+                WHERE wm.StageId > 1
             ), Scores AS
             (
                 SELECT ParticipantId, Name, CorrectPrediction, SubmittedPrediction FROM RegularScores
@@ -312,6 +403,7 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                 INNER JOIN dbo.Matches m ON m.Id = p.MatchId
                 WHERE m.HomeScore IS NOT NULL
                   AND m.AwayScore IS NOT NULL
+                  AND m.StageId = 1
                   AND p.HomeScore = m.HomeScore
                   AND p.AwayScore = m.AwayScore
 
@@ -323,10 +415,52 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                 FROM dbo.KnockoutPredictions kp
                 INNER JOIN dbo.Participants pa ON pa.Id = kp.ParticipantId
                 INNER JOIN dbo.Matches m ON m.BracketMatchNumber = kp.BracketMatchNumber
+                LEFT JOIN dbo.ParticipantKnockoutBrackets pkb
+                    ON pkb.ParticipantId = kp.ParticipantId
+                   AND pkb.BracketMatchNumber = m.BracketMatchNumber
+                CROSS APPLY
+                (
+                    SELECT
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.HomeTeamId
+                             AND pkb.AwayTeamId = m.AwayTeamId THEN kp.HomeScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.AwayTeamId
+                             AND pkb.AwayTeamId = m.HomeTeamId THEN kp.AwayScore
+                            ELSE NULL
+                        END AS HomeScore,
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.HomeTeamId
+                             AND pkb.AwayTeamId = m.AwayTeamId THEN kp.AwayScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.AwayTeamId
+                             AND pkb.AwayTeamId = m.HomeTeamId THEN kp.HomeScore
+                            ELSE NULL
+                        END AS AwayScore
+                ) normalized
                 WHERE m.HomeScore IS NOT NULL
                   AND m.AwayScore IS NOT NULL
-                  AND kp.HomeScore = m.HomeScore
-                  AND kp.AwayScore = m.AwayScore
+                  AND m.StageId > 1
+                  AND normalized.HomeScore = m.HomeScore
+                  AND normalized.AwayScore = m.AwayScore
             )
             SELECT TOP (1)
                 Name,
@@ -367,7 +501,7 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                 LEFT JOIN dbo.Predictions p
                     ON p.ParticipantId = pa.Id
                    AND p.MatchId = m.Id
-                WHERE m.BracketMatchNumber IS NULL
+                WHERE m.StageId = 1
                   AND m.HomeScore IS NOT NULL
                   AND m.AwayScore IS NOT NULL
             ), KnockoutScores AS
@@ -379,9 +513,12 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                     CASE
                         WHEN kp.Id IS NOT NULL
                              AND kp.HomeScore IS NOT NULL
-                             AND kp.AwayScore IS NOT NULL THEN
-                            CASE WHEN SIGN(kp.HomeScore - kp.AwayScore) = SIGN(m.HomeScore - m.AwayScore) THEN 1 ELSE 0 END +
-                            CASE WHEN kp.HomeScore = m.HomeScore AND kp.AwayScore = m.AwayScore THEN 1 ELSE 0 END
+                             AND kp.AwayScore IS NOT NULL
+                             AND normalized.HomeScore IS NOT NULL
+                             AND normalized.AwayScore IS NOT NULL THEN
+                            1 +
+                            CASE WHEN SIGN(normalized.HomeScore - normalized.AwayScore) = SIGN(m.HomeScore - m.AwayScore) THEN 1 ELSE 0 END +
+                            CASE WHEN normalized.HomeScore = m.HomeScore AND normalized.AwayScore = m.AwayScore THEN 1 ELSE 0 END
                         ELSE 0
                     END AS Points
                 FROM dbo.Participants pa
@@ -389,7 +526,48 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                 LEFT JOIN dbo.KnockoutPredictions kp
                     ON kp.ParticipantId = pa.Id
                    AND kp.BracketMatchNumber = m.BracketMatchNumber
-                WHERE m.BracketMatchNumber IS NOT NULL
+                LEFT JOIN dbo.ParticipantKnockoutBrackets pkb
+                    ON pkb.ParticipantId = pa.Id
+                   AND pkb.BracketMatchNumber = m.BracketMatchNumber
+                CROSS APPLY
+                (
+                    SELECT
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.HomeTeamId
+                             AND pkb.AwayTeamId = m.AwayTeamId THEN kp.HomeScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.AwayTeamId
+                             AND pkb.AwayTeamId = m.HomeTeamId THEN kp.AwayScore
+                            ELSE NULL
+                        END AS HomeScore,
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.HomeTeamId
+                             AND pkb.AwayTeamId = m.AwayTeamId THEN kp.AwayScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND m.HomeTeamId IS NOT NULL
+                             AND m.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = m.AwayTeamId
+                             AND pkb.AwayTeamId = m.HomeTeamId THEN kp.HomeScore
+                            ELSE NULL
+                        END AS AwayScore
+                ) normalized
+                WHERE m.StageId > 1
                   AND m.HomeScore IS NOT NULL
                   AND m.AwayScore IS NOT NULL
             ), Scores AS
@@ -450,15 +628,17 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
             WITH MatchPredictionTotals AS
             (
                 SELECT
-                    MatchId,
+                    p.MatchId AS MatchId,
                     COUNT(1) AS TotalPredictions,
                     SUM(CASE WHEN HomeScore > AwayScore THEN 1 ELSE 0 END) AS HomeWinPredictions,
                     SUM(CASE WHEN HomeScore = AwayScore THEN 1 ELSE 0 END) AS DrawPredictions,
                     SUM(CASE WHEN AwayScore > HomeScore THEN 1 ELSE 0 END) AS AwayWinPredictions
-                FROM dbo.Predictions
-                WHERE HomeScore IS NOT NULL
-                  AND AwayScore IS NOT NULL
-                GROUP BY MatchId
+                FROM dbo.Predictions p
+                INNER JOIN dbo.Matches m ON m.Id = p.MatchId
+                WHERE p.HomeScore IS NOT NULL
+                  AND p.AwayScore IS NOT NULL
+                  AND m.StageId = 1
+                GROUP BY p.MatchId
             ), RareHits AS
             (
                 SELECT
@@ -475,6 +655,7 @@ public sealed class HighlightsController(ISqlConnectionFactory connectionFactory
                 INNER JOIN MatchPredictionTotals t ON t.MatchId = p.MatchId
                 WHERE m.HomeScore IS NOT NULL
                   AND m.AwayScore IS NOT NULL
+                  AND m.StageId = 1
                   AND p.HomeScore IS NOT NULL
                   AND p.AwayScore IS NOT NULL
                   AND SIGN(p.HomeScore - p.AwayScore) = SIGN(m.HomeScore - m.AwayScore)

@@ -98,6 +98,7 @@ public sealed class MatchesController(ISqlConnectionFactory connectionFactory) :
                 SELECT
                     m.Id,
                     m.BracketMatchNumber,
+                    m.StageId,
                     m.HomeTeamId,
                     m.AwayTeamId
                 FROM dbo.Matches m
@@ -112,7 +113,7 @@ public sealed class MatchesController(ISqlConnectionFactory connectionFactory) :
                     CAST(NULL AS bit) AS CorrectBracket
                 FROM MatchInfo mi
                 INNER JOIN dbo.Predictions p
-                    ON mi.BracketMatchNumber IS NULL
+                    ON mi.StageId = 1
                    AND p.MatchId = mi.Id
                 INNER JOIN dbo.Participants pa ON pa.Id = p.ParticipantId
                 WHERE p.HomeScore IS NOT NULL
@@ -122,26 +123,56 @@ public sealed class MatchesController(ISqlConnectionFactory connectionFactory) :
 
                 SELECT
                     pa.Name AS ParticipantName,
-                    kp.HomeScore,
-                    kp.AwayScore,
+                    COALESCE(normalized.HomeScore, kp.HomeScore) AS HomeScore,
+                    COALESCE(normalized.AwayScore, kp.AwayScore) AS AwayScore,
                     CAST(1 AS bit) AS IsKnockout,
-                    CAST(
-                        CASE
-                            WHEN mi.HomeTeamId IS NULL OR mi.AwayTeamId IS NULL THEN NULL
-                            WHEN pkb.Id IS NOT NULL
-                             AND pkb.HomeTeamId = mi.HomeTeamId
-                             AND pkb.AwayTeamId = mi.AwayTeamId THEN 1
-                            ELSE 0
-                        END AS bit
-                    ) AS CorrectBracket
+                    CAST(CASE WHEN normalized.HomeScore IS NOT NULL AND normalized.AwayScore IS NOT NULL THEN 1 ELSE 0 END AS bit) AS CorrectBracket
                 FROM MatchInfo mi
                 INNER JOIN dbo.KnockoutPredictions kp
-                    ON mi.BracketMatchNumber IS NOT NULL
+                    ON mi.StageId > 1
                    AND kp.BracketMatchNumber = mi.BracketMatchNumber
                 INNER JOIN dbo.Participants pa ON pa.Id = kp.ParticipantId
                 LEFT JOIN dbo.ParticipantKnockoutBrackets pkb
                     ON pkb.ParticipantId = kp.ParticipantId
                    AND pkb.BracketMatchNumber = mi.BracketMatchNumber
+                CROSS APPLY
+                (
+                    SELECT
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND mi.HomeTeamId IS NOT NULL
+                             AND mi.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = mi.HomeTeamId
+                             AND pkb.AwayTeamId = mi.AwayTeamId THEN kp.HomeScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND mi.HomeTeamId IS NOT NULL
+                             AND mi.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = mi.AwayTeamId
+                             AND pkb.AwayTeamId = mi.HomeTeamId THEN kp.AwayScore
+                            ELSE NULL
+                        END AS HomeScore,
+                        CASE
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND mi.HomeTeamId IS NOT NULL
+                             AND mi.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = mi.HomeTeamId
+                             AND pkb.AwayTeamId = mi.AwayTeamId THEN kp.AwayScore
+                            WHEN pkb.Id IS NOT NULL
+                             AND pkb.HomeTeamId IS NOT NULL
+                             AND pkb.AwayTeamId IS NOT NULL
+                             AND mi.HomeTeamId IS NOT NULL
+                             AND mi.AwayTeamId IS NOT NULL
+                             AND pkb.HomeTeamId = mi.AwayTeamId
+                             AND pkb.AwayTeamId = mi.HomeTeamId THEN kp.HomeScore
+                            ELSE NULL
+                        END AS AwayScore
+                ) normalized
                 WHERE kp.HomeScore IS NOT NULL
                   AND kp.AwayScore IS NOT NULL
             )
