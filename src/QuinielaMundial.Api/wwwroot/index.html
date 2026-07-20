@@ -19,7 +19,7 @@
     <header class="hero">
         <div class="hero-content">
             <h1>Quiniela Mundial 2026</h1>
-            <p style="font-weight: bold;">Partidos del día · Ranking · Predicciones guardadas</p>
+            <p style="font-weight: bold;">Resultado final · Ranking · Premios individuales</p>
         </div>
     </header>
 
@@ -33,115 +33,69 @@
             </div>
 
             <div class="dashboard-publico">
+                <section class="top-ranking-card ganador-final-card">
+                    <div class="section-title">
+                        <h2>Ganador de la quiniela</h2>
+                        <small>Ranking final</small>
+                    </div>
+                    <article class="voto-card voto-card-final ganador-card-grande">
+                        <span class="voto-label">Campeón final</span>
+                        <strong id="winnerName">Cargando...</strong>
+                        <small id="winnerSummary">Sumando resultados de partidos y premios individuales.</small>
+                    </article>
+                    <div class="resumen ganador-final-resumen">
+                        <div class="stat">
+                            <span>Puntos totales</span>
+                            <strong id="winnerPoints">0</strong>
+                        </div>
+                        <div class="stat">
+                            <span>Puntos por premios</span>
+                            <strong id="winnerAwardPoints">0</strong>
+                        </div>
+                        <div class="stat">
+                            <span>Marcadores exactos</span>
+                            <strong id="winnerExactScores">0</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="top-ranking-card premios-finales-card">
+                    <div class="section-title">
+                        <h2>Puntos por premios individuales</h2>
+                        <small id="premiosFinalesEstado">Cargando premios...</small>
+                    </div>
+                    <p class="fecha-contexto" id="awardSummary">Cada premio suma 5 puntos cuando el pronóstico coincide con el ganador oficial.</p>
+                    <div class="votaciones-destacadas premios-finales-grid" id="awardResultsList">
+                        <div class="placeholder">Cargando premios oficiales...</div>
+                    </div>
+                    <div id="awardParticipantScores" class="premios-participantes-lista">
+                        <div class="placeholder">Calculando puntos por premios...</div>
+                    </div>
+                </section>
+
                 <section class="top-ranking-card">
                     <div class="section-title">
-                        <h2>Primeros 3 lugares</h2>
-                        <small id="topRankingEstado">Cargando ranking...</small>
+                        <h2>Ranking final</h2>
+                        <small id="rankingStatus">Cargando ranking...</small>
                     </div>
                     <div class="ranking-table-wrap ranking-compact-wrap">
-                        <table class="ranking-table ranking-compact">
+                        <table class="ranking-table ranking-compact ranking-final-compact">
                             <thead>
                                 <tr>
                                     <th>Posición</th>
                                     <th>Participante</th>
                                     <th>Puntos</th>
+                                    <th>Premios</th>
+                                    <th>Exactos</th>
                                 </tr>
                             </thead>
-                            <tbody id="topRankingTabla"></tbody>
+                            <tbody id="finalRankingTable"></tbody>
                         </table>
                     </div>
-                </section>
-
-                <section class="partidos-dia-card">
-                    <div class="section-title">
-                        <h2 id="fechaPartidosTitulo">Partidos del día</h2>
-                        <small id="contadorVista"></small>
-                    </div>
-                    <p class="fecha-contexto" id="fechaPartidosDetalle"></p>
-                    <div class="partidos" id="partidos"></div>
-                </section>
-
-                <section class="votaciones-destacadas" aria-label="Votaciones destacadas">
-                    <article class="voto-card voto-card-final">
-                        <span class="voto-tooltip" tabindex="0" aria-label="Se calcula contando qué selección aparece más veces como campeona en las predicciones de la final." data-tooltip="Se calcula contando qué selección aparece más veces como campeona en las predicciones de la final.">i</span>
-                        <span class="voto-label">Más votado para ganar la final</span>
-                        <strong id="finalWinnerName">Cargando...</strong>
-                        <small id="finalWinnerVotes">Calculando votos</small>
-                    </article>
-
-                    <article class="voto-card voto-card-ballon">
-                        <span class="voto-tooltip" tabindex="0" aria-label="Se calcula contando qué jugador fue elegido más veces para Balón de oro." data-tooltip="Se calcula contando qué jugador fue elegido más veces para Balón de oro.">i</span>
-                        <span class="voto-label">Balón de oro más votado</span>
-                        <strong id="ballonDOrName">Cargando...</strong>
-                        <small id="ballonDOrVotes">Calculando votos</small>
-                    </article>
-
-                    <article class="voto-card voto-card-score">
-                        <span class="voto-tooltip" tabindex="0" aria-label="Se calcula con los pronósticos de los partidos del día mostrado y muestra el marcador exacto que más se repite." data-tooltip="Se calcula con los pronósticos de los partidos del día mostrado y muestra el marcador exacto que más se repite.">i</span>
-                        <span class="voto-label">Marcador más repetido del día</span>
-                        <strong id="popularScoreValue">Cargando...</strong>
-                        <small id="popularScoreTotal">Calculando pronósticos</small>
-                    </article>
-
-                    <article class="voto-card voto-card-divided">
-                        <span class="voto-tooltip" tabindex="0" aria-label="Se calcula con los partidos del día mostrado y elige el partido con votos más parejos entre local, empate y visitante." data-tooltip="Se calcula con los partidos del día mostrado y elige el partido con votos más parejos entre local, empate y visitante.">i</span>
-                        <span class="voto-label">Partido más dividido del día</span>
-                        <strong id="dividedMatchName">Cargando...</strong>
-                        <small id="dividedMatchTotal">Calculando pronósticos</small>
-                    </article>
-
-                    <article class="voto-card voto-card-almost">
-                        <span class="voto-tooltip" tabindex="0" aria-label="Se calcula contando quién quedó a exactamente un gol de acertar el marcador real más veces." data-tooltip="Se calcula contando quién quedó a exactamente un gol de acertar el marcador real más veces.">i</span>
-                        <span class="voto-label">El Rey del Casi</span>
-                        <strong id="almostKingName">Cargando...</strong>
-                        <small id="almostKingTotal">Calculando casi aciertos</small>
-                    </article>
-
-                    <article class="voto-card voto-card-salted">
-                        <span class="voto-tooltip" tabindex="0" aria-label="Se calcula en la semana del último resultado registrado y muestra quién tuvo menos aciertos con predicciones enviadas." data-tooltip="Se calcula en la semana del último resultado registrado y muestra quién tuvo menos aciertos con predicciones enviadas.">i</span>
-                        <span class="voto-label">El salado de la jornada</span>
-                        <strong id="weeklySaltedName">Cargando...</strong>
-                        <small id="weeklySaltedTotal">Calculando aciertos de la jornada</small>
-                    </article>
-
-                    <article class="voto-card voto-card-wizard">
-                        <span class="voto-tooltip" tabindex="0" aria-label="Se calcula contando quién acertó más marcadores exactos en partidos con resultado registrado." data-tooltip="Se calcula contando quién acertó más marcadores exactos en partidos con resultado registrado.">i</span>
-                        <span class="voto-label">El brujo mayor de Catemaco</span>
-                        <strong id="exactWizardName">Cargando...</strong>
-                        <small id="exactWizardTotal">Calculando marcadores exactos</small>
-                    </article>
-
-                    <article class="voto-card voto-card-phoenix" id="weeklyRiseCard" hidden>
-                        <span class="voto-tooltip" tabindex="0" aria-label="Se calcula comparando el ranking antes de la semana actual contra el ranking actual; solo aparece si subió más de 5 posiciones." data-tooltip="Se calcula comparando el ranking antes de la semana actual contra el ranking actual; solo aparece si subió más de 5 posiciones.">i</span>
-                        <span class="voto-label">El Ave Fénix</span>
-                        <strong id="weeklyRiseName">Cargando...</strong>
-                        <small id="weeklyRiseTotal">Calculando posiciones subidas</small>
-                    </article>
-
-                    <article class="voto-card voto-card-prophet">
-                        <span class="voto-tooltip" tabindex="0" aria-label="Se calcula sumando puntos raros por acertar resultados que pocos participantes eligieron." data-tooltip="Se calcula sumando puntos raros por acertar resultados que pocos participantes eligieron.">i</span>
-                        <span class="voto-label">El profeta del 3%</span>
-                        <strong id="rareProphetName">Cargando...</strong>
-                        <small id="rareProphetTotal">Calculando puntos raros</small>
-                    </article>
                 </section>
             </div>
         </section>
     </main>
-
-    <div class="modal-backdrop resultados-modal" id="resultadosParticipantesModal" role="dialog" aria-modal="true" aria-labelledby="resultadosModalTitulo" hidden>
-        <div class="modal-card resultados-modal-card">
-            <div class="modal-header">
-                <div>
-                    <span class="voto-label">Resultados de participantes</span>
-                    <h2 id="resultadosModalTitulo">Partido</h2>
-                    <p id="resultadosModalDetalle" class="resultado-partido-meta"></p>
-                </div>
-                <button class="btn-secondary modal-close" type="button" id="cerrarResultadosModal">Cerrar</button>
-            </div>
-            <div id="resultadosModalContenido" class="resultados-modal-contenido"></div>
-        </div>
-    </div>
 
     <footer class="footer">
         <p>© 2026 Impulso Tecnológico. Todos los derechos reservados.</p>

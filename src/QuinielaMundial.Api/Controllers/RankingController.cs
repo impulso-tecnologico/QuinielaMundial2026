@@ -13,6 +13,37 @@ public sealed class RankingController(ISqlConnectionFactory connectionFactory) :
     public async Task<ActionResult<IReadOnlyList<RankingParticipantResponse>>> Get(CancellationToken cancellationToken)
     {
         const string sql = """
+            CREATE TABLE #AwardScores
+            (
+                ParticipantId INT NOT NULL PRIMARY KEY,
+                AwardPoints INT NOT NULL
+            );
+
+            IF OBJECT_ID(N'dbo.AwardResults', N'U') IS NOT NULL
+            BEGIN
+                EXEC sp_executesql N'
+                    INSERT INTO #AwardScores (ParticipantId, AwardPoints)
+                    SELECT
+                        pa.Id AS ParticipantId,
+                        SUM(
+                            CASE
+                                WHEN ar.AwardCode = N''BALLON_DOR''
+                                 AND NULLIF(LTRIM(RTRIM(ap.BallonDOr)), N'''') COLLATE Latin1_General_CI_AI = LTRIM(RTRIM(ar.WinnerName)) COLLATE Latin1_General_CI_AI THEN ar.Points
+                                WHEN ar.AwardCode = N''GOLDEN_BOOT''
+                                 AND NULLIF(LTRIM(RTRIM(ap.GoldenBoot)), N'''') COLLATE Latin1_General_CI_AI = LTRIM(RTRIM(ar.WinnerName)) COLLATE Latin1_General_CI_AI THEN ar.Points
+                                WHEN ar.AwardCode = N''GOLDEN_GLOVE''
+                                 AND NULLIF(LTRIM(RTRIM(ap.GoldenGlove)), N'''') COLLATE Latin1_General_CI_AI = LTRIM(RTRIM(ar.WinnerName)) COLLATE Latin1_General_CI_AI THEN ar.Points
+                                ELSE 0
+                            END
+                        ) AS AwardPoints
+                    FROM dbo.Participants pa
+                    CROSS JOIN dbo.AwardResults ar
+                    LEFT JOIN dbo.AwardPredictions ap ON ap.ParticipantId = pa.Id
+                    WHERE NULLIF(LTRIM(RTRIM(ar.WinnerName)), N'''') IS NOT NULL
+                    GROUP BY pa.Id;
+                ';
+            END;
+
             WITH LatestScoredMatch AS
             (
                 SELECT TOP (1)
@@ -159,12 +190,14 @@ public sealed class RankingController(ISqlConnectionFactory connectionFactory) :
                 SELECT
                     pa.Id AS ParticipantId,
                     pa.Name,
-                    COALESCE(st.Points, 0) AS Points,
+                    COALESCE(st.Points, 0) + COALESCE(aws.AwardPoints, 0) AS Points,
+                    COALESCE(aws.AwardPoints, 0) AS AwardPoints,
                     COALESCE(st.ExactScores, 0) AS ExactScores,
                     COALESCE(st.CorrectResults, 0) AS CorrectResults,
                     COALESCE(st.PredictionsScored, 0) AS PredictionsScored
                 FROM dbo.Participants pa
                 LEFT JOIN ScoreTotals st ON st.ParticipantId = pa.Id
+                LEFT JOIN #AwardScores aws ON aws.ParticipantId = pa.Id
             ), LatestMatchScores AS
             (
                 SELECT
@@ -182,6 +215,7 @@ public sealed class RankingController(ISqlConnectionFactory connectionFactory) :
                     t.ParticipantId,
                     t.Name,
                     t.Points - COALESCE(l.Points, 0) AS Points,
+                    t.AwardPoints,
                     t.ExactScores - COALESCE(l.ExactScores, 0) AS ExactScores,
                     t.CorrectResults - COALESCE(l.CorrectResults, 0) AS CorrectResults,
                     t.PredictionsScored - COALESCE(l.PredictionsScored, 0) AS PredictionsScored
@@ -194,6 +228,7 @@ public sealed class RankingController(ISqlConnectionFactory connectionFactory) :
                     ParticipantId,
                     Name,
                     Points,
+                    AwardPoints,
                     ExactScores,
                     CorrectResults,
                     PredictionsScored
@@ -210,6 +245,7 @@ public sealed class RankingController(ISqlConnectionFactory connectionFactory) :
                 c.ParticipantId,
                 c.Name,
                 c.Points,
+                c.AwardPoints,
                 c.ExactScores,
                 c.CorrectResults,
                 c.PredictionsScored,

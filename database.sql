@@ -19,6 +19,7 @@ GO
 IF OBJECT_ID(N'dbo.KnockoutPredictions', N'U') IS NOT NULL DROP TABLE dbo.KnockoutPredictions;
 IF OBJECT_ID(N'dbo.ParticipantKnockoutBrackets', N'U') IS NOT NULL DROP TABLE dbo.ParticipantKnockoutBrackets;
 IF OBJECT_ID(N'dbo.AwardPredictions', N'U') IS NOT NULL DROP TABLE dbo.AwardPredictions;
+IF OBJECT_ID(N'dbo.AwardResults', N'U') IS NOT NULL DROP TABLE dbo.AwardResults;
 IF OBJECT_ID(N'dbo.Predictions', N'U') IS NOT NULL DROP TABLE dbo.Predictions;
 IF OBJECT_ID(N'dbo.Matches', N'U') IS NOT NULL DROP TABLE dbo.Matches;
 IF OBJECT_ID(N'dbo.TournamentStages', N'U') IS NOT NULL DROP TABLE dbo.TournamentStages;
@@ -178,6 +179,17 @@ GO
 CREATE UNIQUE INDEX UX_AwardPredictions_Participant ON dbo.AwardPredictions (ParticipantId);
 GO
 
+CREATE TABLE dbo.AwardResults
+(
+    AwardCode NVARCHAR(30) NOT NULL CONSTRAINT PK_AwardResults PRIMARY KEY,
+    AwardName NVARCHAR(80) NOT NULL,
+    WinnerName NVARCHAR(160) NULL,
+    Points INT NOT NULL CONSTRAINT DF_AwardResults_Points DEFAULT 5,
+    UpdatedAtUtc DATETIME2(0) NOT NULL CONSTRAINT DF_AwardResults_UpdatedAtUtc DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT CK_AwardResults_Points CHECK (Points > 0)
+);
+GO
+
 INSERT INTO dbo.TournamentStages (Code, Name, SortOrder)
 VALUES
     (N'GROUPS', N'Fase de grupos', 1),
@@ -186,6 +198,13 @@ VALUES
     (N'QF', N'Cuartos', 4),
     (N'SF', N'Semifinales', 5),
     (N'F', N'Final', 6);
+GO
+
+INSERT INTO dbo.AwardResults (AwardCode, AwardName, Points)
+VALUES
+    (N'BALLON_DOR', N'Balón de oro', 5),
+    (N'GOLDEN_BOOT', N'Bota de oro', 5),
+    (N'GOLDEN_GLOVE', N'Guante de oro', 5);
 GO
 
 DECLARE @GroupMatches TABLE
